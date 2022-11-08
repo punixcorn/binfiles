@@ -1,0 +1,10 @@
+#!/bin/bash
+clear;
+figlet UPDATING
+
+sudo rm -rf /mnt/sdcard/"Juice Wrld"
+echo "Done deleting the Old Juice wrld files";
+echo "now updating, will take a few Seconds"
+cp -r /home/potatojs/Music/"Juice Wrld" /mnt/sdcard
+
+figlet DONE

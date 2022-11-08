@@ -1,0 +1,5 @@
+#!/bin/bash  
+read -p "kill: ";
+pkill -e -i $REPLY;
+pkill -e -i $REPLY;
+
