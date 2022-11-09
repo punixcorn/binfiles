@@ -1,14 +1,14 @@
 #include "binHeaders.h"
-#include <stdio.h>
-char command[100]; // commandis puts into command
+char command[100]; // input puts into command
 void runc(char *string) {
-  commandis("cd $(pwd) && python3 ");
-  commandis(string);
+  input("cd $(pwd) && rustc -o main ");
+  input(string);
+  input(" && ./main");
   system(command);
 }
 int main(int argc, char **argv) {
   if (argc == 1) {
-    runc("main.py");
+    runc("main.rs");
   } else if (argc > 1) {
     runc(*(argv + 1));
   } else {

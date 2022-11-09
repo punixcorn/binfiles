@@ -1,11 +1,10 @@
-// savegit -m "hey there" -y
+// no files linked had to do this from sratch
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 char temp[100], message[500], command[1024];
 int i = 1, sflag = 0;
 
-void tripFlag();
 void reset(int num);
 void input(char *arg);
 void sort(char *str);
@@ -23,17 +22,11 @@ argc2:
     if (length > 2 && *(argv + i)[0] != '-') {
       strcat(message, *(argv + i));
       break;
-    } else if (length > 2 && *(argv + i)[0] == '-') {
-      ;
-    }
+    };
     i++;
   }
-  /* debug statement*/
-  printf("%s : should be the message\n", message);
 
   reset(1);
-  /* debug statement*/
-  printf("%d : should be 1\n", i);
   while (i < argc) {
     sort(*(argv + i));
     i++;
@@ -67,8 +60,6 @@ void sort(char *str) {
 
 void savegit() {
   input(temp);
-  /*debug statement*/
-  printf("%s:should be the command\n", command);
   system(command);
 }
 
@@ -76,5 +67,3 @@ void reset(int num) {
   *&i = 0;
   *&i += num;
 }
-
-void tripFlag() { *&sflag = 1; }

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+lsblk | grep sd
+read -p "sd-- : ";
+echo "mount where[ m(mnt) | mm(media) ]: "
+read place
+  
+if [ $place = "m" ];then
+    place=mnt
+  elif [ $place = "mm" ];then
+    place=media
+  else 
+    place=mnt
+fi
+sudo mount /dev/sd$REPLY /$place
+    
+
