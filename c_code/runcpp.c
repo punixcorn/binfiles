@@ -1,19 +1,20 @@
 #include "binHeaders.h"
-#include <stdio.h>
-char command[100]; // commandis puts into command
-void runc(char *string) {
-  commandis("cd $(pwd) && clang++ -o main ");
-  commandis(string);
-  commandis(" && ./main");
+char command[100]; // input puts into command
+void runcpp(char *string) {
+  input("cd $(pwd) && clang++ -o main ");
+  input(string);
+  input(" && ./main");
   system(command);
+  exit(0);
 }
 int main(int argc, char **argv) {
   if (argc == 1) {
-    runc("main.cpp");
-  } else if (argc > 1) {
-    runc(*(argv + 1));
+    runcpp("main.cpp");
+  } else if (argc == 2) {
+    runcpp(*(argv + 1));
   } else {
-    printf("either main file not found or file passed as argument not found\n");
+    stderror(
+        "runcpp <file_name>\n\\e[32mexample:\n\t\\e[0m$ runcpp doom.cpp\n\tif "
+        "no argument is passed, it will look for 'main.cpp' file to run\n");
   }
-  exit(0);
 }

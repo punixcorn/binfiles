@@ -16,12 +16,12 @@ void mountsd(char *str1, char *str2) {
 }
 
 int main(int argc, char **argv) {
-  if (argc > 1) {
+  if (argc == 3) {
     goto argc2;
   }
-  printf("mount file not given\nmount dirctory not given\n");
-  system("lsblk | grep sd");
-  exit(0);
+  stderror("msd <mount to dir> <dev name>\n\\e[32mexample:\\e[0m\n\t$ msd /mnt "
+           "sda1\n");
+
 argc2:
   mountsd(*(argv + 1), *(argv + 2));
   exit(0);

@@ -1,11 +1,13 @@
+<!--
 ### these are personal scripts
 
 ### to get the set it up 
-  
+
 #### 1. clone the repo in your home directory
-  
+
 #### 2. run the file makefolderExecutable in the bin folder
-    ##### this addes the folder to your path   
+
+  ##### this addes the folder to your path   
     ###### this is done by putting the a script in your Zsh/bash startup file eg(.zshrc,.bashrc or .bash_profile) hence you should know your default startup file
 
 
@@ -36,4 +38,4 @@ __Usage__ :
 `$ findfile ` it will ask for the file to find
 </p>
 
-
+-->

@@ -1,3 +1,0 @@
-clear;
-echo "checking internet connection with ArchLinux Servers"
-ping -c4 archlinux.org;

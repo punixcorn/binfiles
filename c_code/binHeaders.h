@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #define BUFFERSIZE 100
+#define BUFFERSIZEX 500
 extern char command[BUFFERSIZE];
+extern char error[BUFFERSIZEX];
 void input(char *arg);
+void stderror(char *arg);
 #endif

@@ -1,3 +1,9 @@
 #!/bin/bash
-read -p "Find: "
-sudo find / -iname "$REPLY" | grep $REPLY
+
+function findfile(){
+  sudo find $1 -iname "$2" | grep $2
+}
+
+if [[ $# -eq 2 ]];then
+  findfile ""
+

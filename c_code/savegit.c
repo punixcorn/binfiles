@@ -19,7 +19,7 @@ argc2:
   input("cd $(pwd) && git add . && git commit -m '");
   while (i <= argc) {
     int length = strlen(*(argv + i));
-    if (length > 2 && *(argv + i)[0] != '-') {
+    if (length > 1 && *(argv + i)[0] != '-') {
       strcat(message, *(argv + i));
       break;
     };
@@ -27,7 +27,7 @@ argc2:
   }
 
   reset(1);
-  while (i < argc) {
+  while (i <= argc) {
     sort(*(argv + i));
     i++;
   }

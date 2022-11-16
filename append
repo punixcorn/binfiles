@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+
+if [[ $# -gt 1 ]];then
+  if [[ "$1" = "list" ]] && [[ $2 ]];then
+     head -n $2 $HOME/Desktop/saved.txt
+   else
+  printf "[*] $1\n" >> $HOME/Desktop/saved.txt
+fi
+fi
+
