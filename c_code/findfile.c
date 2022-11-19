@@ -14,8 +14,8 @@ void run(void);
 int main(int argc, char **argv) {
   if (argc >= 2) {
     goto arg;
-  } else if (argc)
-    printf("No arguments given\n***\tprogram terminated\n");
+  } else if (argc == 1)
+    stderror("findfile <file/dir> <location>\nexample:\n\tfindfile main.cpp /mnt\n\tif no location passed it will start at \"\/\"\n");
   exit(0);
 arg:
   while (i < argc) {

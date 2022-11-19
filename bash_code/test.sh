@@ -1,2 +1,6 @@
 #!/usr/bin/bash
-  printf "$1\n"
+FDIR=/home/$USER/bin/msds
+man=0
+if [ ! "$man" ];then
+  echo found
+fi
