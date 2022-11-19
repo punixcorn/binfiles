@@ -1,5 +1,0 @@
-#!/bin/bash
-if [[ $# -eq 2 ]];then
-cd ./complied && shc -f ../$1 -o $2 && mv ./$2 ../ 
-fi
-
