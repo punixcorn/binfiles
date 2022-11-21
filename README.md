@@ -2,11 +2,13 @@
 
 these are binaries i wrote in C and complied and put them in a folder exported to path so i can call from anywhere
 
-it would be better to **write them in bash** they take half the space and are easiler to edit or write but i chosse C/C++
+it would be better to **write them in bash** , bash scripts  take half the space and they are easier to edit or write but i chosse **C/C++**
 
-becuase am currently learning that , they still work, all the C code does is parse the text you pass into into it and translates and arranges them accordingly
+because am currently learning that , they still work, all the C code does is parse the text you pass into into it and translates and arranges them accordingly
 
 and calls the **system()** function to out them into the terminal
+
+###### will be rewritten to use the syscalls instead of calling **system()**
 
 ### Install
 
