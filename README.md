@@ -14,6 +14,9 @@ and calls the **system()** function to out them into the terminal
 
 clone the folder to home and run the **makefolderExecutable** to automatically add the folder to path or you can do it mannually
 
+### Errors
 if **makefolderExecutable** doesnt run , make it executable by 
-
 ` sudo chmod 777 makefolderExecutable `
+
+if **makehere** doesnt run , make it an executable by
+` sudo chmod 777 makehere `

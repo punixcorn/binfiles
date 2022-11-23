@@ -4,7 +4,12 @@
 # for now it just creates a make file 
 
 DIR=$(pwd)
-
+yellow="\e[33m"
+green="\e[32m"
+red="\e31m"
+rs="\e[0m"
+ul="\e[4m"
+bold="\e[1m"
 if [[ -f /bin/ccat ]];then
     CA=ccat
 else
@@ -20,43 +25,50 @@ function makefile(){
         mv $DIR/makefile $DIR/makefile.backup
     fi
 
-    if [[ '$1' = 'cpp' ]];then    
-        printf "CC=g++\nFLAGS= -std=c++11 -W -O2 -g -Wextra -Werror\nEFLAGS= -s -save-temnps -O2\nRM= rm\nall:\n\$(CC) \$(args) -o main \$(FLAGS)\n./main\ndebug:\n\$(CC) \$(args) -o main \$(EFLAGS) \$(FLAGS)\n./main\nall:\n\$(RM) main\n" > $DIR/makefile 1>>\&2 /dev/null
+    if [[ $1 = 'cpp' ]];then    
+        printf "CC=g++\nFLAGS= -std=c++11 -W -O2 -g -Wextra \nEFLAGS= -s -save-temnps -O2 -Werror\nRM= rm\n\ndefualt:\n\t\$(CC) \$(args) -o main \$(FLAGS)\n\ndebug:\n\t\$(CC) \$(args) -o main \$(EFLAGS) \$(FLAGS)\n\nwarg:\n\t\$(CC) \$(args) -o main \$(FLAGS)\n\t./main \$(pargs)\n\nwarg-d:\n\t\$(CC) \$(args) -o main \$(FLAGS) \$(EFLAGS)\n\t./main \$(pargs)\n\nrm:\n\t\$(RM) main\n" > $DIR/makefile 2>> /dev/null
         printf "Done, Makefile produced is :\n"
         $CA $DIR/makefile 
-    elif [[ '$1' = 'c' ]];then
-        printf "CC=gcc\nFLAGS= -std=c99 -W -O2 -g -Wextra -Werror\nEFLAGS= -s -save-temnps -O2\nRM= rm\nall:\n\$(CC) \$(args) -o main \$(FLAGS)\n./main\ndebug:\n\$(CC) \$(args) -o main \$(EFLAGS) \$(FLAGS)\n./main\nall:\n\$(RM) main\n" > $DIR/makefile 1>>\&2 /dev/null
+    elif [[ $1 = 'c' ]];then
+        printf "CC=gcc\nFLAGS= -std=c99 -W -O2 -g -Wextra \nEFLAGS= -s -save-temnps -O2 -Werror\nRM= rm\n\ndefualt:\n\t\$(CC) \$(args) -o main \$(FLAGS)\n\ndebug:\n\t\$(CC) \$(args) -o main \$(EFLAGS) \$(FLAGS)\n\nwarg:\n\t\$(CC) \$(args) -o main \$(FLAGS)\n\t./main \$(pargs)\n\nwarg-d:\n\t\$(CC) \$(args) -o main \$(FLAGS) \$(EFLAGS)\n\t./main \$(pargs)\n\nrm:\n\t\$(RM) main\n" > $DIR/makefile 2>> /dev/null
         printf "Done, Makefile produced is :\n"
         $CA $DIR/makefile
     fi
 }
 
-
 function Error(){
-    printf "\e[1m\e[31minvalid arguements passsed\n\e[0mUsage:\n\tmakehere <C/CC>\nExample\n\t\e[32mmakehere C\n\n\e[0mC -> will make a C makefile in your current DIR\nCPP -> will make a C++ makefile in your current DIR\n\nThere will be 3 make options in the Makefile:\n\t1.all -> default\n\t2.debug -> make an asm file and adds more flags\n\t3.rm -> removes the executable created which is always main\nMake sure to pass in args=\"filename\"  to pass in the file to compile\nA c example will be\n\t\e[1m\e[33mmake all args=test.c\n\t\e[0mThis is assuming you have a test.c file in your currentd dir\n\t\e[1m\e[33mmake rm\n\t\e[0mThis will remove the main executable created\n\t\e[1m\e[33mmake debug args=test.c\n\t\e[0mThis will use the debug option which has more flags related to debugging\n"
+    printf "makehere: missing file argument.\nTry $bold 'makehere -h' $rs for more information\n" 2> /dev/null
+
+}
+function Infomation(){
+    printf "makehere is a command to create a makefile at your current directory\n$rs Usage:\n\tmakehere <C/CC>\n$ul Example$rs \n\t$green makehere C\n\t makehere CC\n\n$rs C  -> will make a C makefile in your current DIR\n CC -> will make a C++ makefile in your current DIR\n\n$ul There are $bold 5 $rs$ul make options in the Makefile :$rs \n\t1.default-> default make\n\t2.debug -> make an asm file and adds more flags( hardens compilation )\n\t3.warg ->(with-argruments) This runs the program after compliation\n\t4.warg-d -> (with-argruments-debug) This runs the program after compilation but with debug flags\n\t5.rm -> removes the executable created which is always main\n\n$ul Arguments to pass :$rs \n\t$bold * args=\"filename\" $rs (This will pass in the file name to be compiled and runned)\n\t( compulsory for all makes )$bold \n\t * pargs=\"your args\" $rs (dont add this if your program doesnt require any arguments at it's call)\n\t( only available for wargs and wargs-d)$rs \n\n$ul A C makefile example will be :\n\t$rs$bold$yellow make args=test.c\n\t$rs This is assuming you have a test.c file in your current dir (default make)\n\t$bold$yellow make wargs args=test2.c pargs=\"1 2 3\"\n\t$rs This is assuming you have a test2.c file in your current dir\n\t and you want to run after compliation\n\t it does require argument(s) at its call\n\t$bold$yellow make wargs args=test3.c\n\t$rs This is assuming you have a test3.c in your dir\n\t and you wan to run after compliation\n\t and dont want any agruments passed\n\t$bold$yellow make rm\n\t$rs This will remove the main executable created\n\t$bold$yellow make debug args=test.c\n\t$rs This will use the debug option which has more flags related to debugging\n\t can also use pargs here\n"
 }
 
 function make_a_makefile(){
-    if [[ '$1' = 'C'|| '$1' = 'c' ]];then
+    if [ $1 = "C" ] || [ $1 = "c" ] ;then
         makefile "c" 
-    elif [[ '$1' = 'CC'|| '$1' = 'cc' ]];then
+    elif [ $1 = 'CC' ] || [ $1 = 'cc' ] ;then
         makefile "cpp"
     else
+       printf "$red Invalid Arguments passed$rs \n"
         Error
     fi
 }
 
 #--------------------------------End of Functions-------------------------------#
 
-
-if [[ $# -eq 0 ]];then
+if [[ "$#" = "0" ]];then
     Error
-exit 1
-fi
-
-if [[ $# -eq 1 ]];then
-    make_a_makefile "$1"
+    exit 1
+elif [[ "$#" = "1" ]];then
+    if [[ $1 = "-h" ]];then
+        Infomation
+        exit 1;
+    else
+    make_a_makefile $1
+    fi
 else
+    printf "$red Invalid Arguments passed$rs \n"
     Error
     exit 1
 fi
