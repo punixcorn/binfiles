@@ -1,0 +1,66 @@
+# make a makefile
+# call it from everywhere
+# copies the make file and passes the argumemnts you pass
+# for now it just creates a make file 
+
+DIR=$(pwd)
+
+if [[ -f /bin/ccat ]];then
+    CA=ccat
+else
+    CA=cat
+fi
+
+
+
+#-----------------------------Functions-----------------------------------------#
+function makefile(){ 
+    if [[ -f $DIR/makefile ]];then
+        printf 'Makefile found moving into makefile.backup\n'
+        mv $DIR/makefile $DIR/makefile.backup
+    fi
+
+    if [[ '$1' = 'cpp' ]];then    
+        printf "CC=g++\nFLAGS= -std=c++11 -W -O2 -g -Wextra -Werror\nEFLAGS= -s -save-temnps -O2\nRM= rm\nall:\n\$(CC) \$(args) -o main \$(FLAGS)\n./main\ndebug:\n\$(CC) \$(args) -o main \$(EFLAGS) \$(FLAGS)\n./main\nall:\n\$(RM) main\n" > $DIR/makefile 1>>\&2 /dev/null
+        printf "Done, Makefile produced is :\n"
+        $CA $DIR/makefile 
+    elif [[ '$1' = 'c' ]];then
+        printf "CC=gcc\nFLAGS= -std=c99 -W -O2 -g -Wextra -Werror\nEFLAGS= -s -save-temnps -O2\nRM= rm\nall:\n\$(CC) \$(args) -o main \$(FLAGS)\n./main\ndebug:\n\$(CC) \$(args) -o main \$(EFLAGS) \$(FLAGS)\n./main\nall:\n\$(RM) main\n" > $DIR/makefile 1>>\&2 /dev/null
+        printf "Done, Makefile produced is :\n"
+        $CA $DIR/makefile
+    fi
+}
+
+
+function Error(){
+    printf "\e[1m\e[31minvalid arguements passsed\n\e[0mUsage:\n\tmakehere <C/CC>\nExample\n\t\e[32mmakehere C\n\n\e[0mC -> will make a C makefile in your current DIR\nCPP -> will make a C++ makefile in your current DIR\n\nThere will be 3 make options in the Makefile:\n\t1.all -> default\n\t2.debug -> make an asm file and adds more flags\n\t3.rm -> removes the executable created which is always main\nMake sure to pass in args=\"filename\"  to pass in the file to compile\nA c example will be\n\t\e[1m\e[33mmake all args=test.c\n\t\e[0mThis is assuming you have a test.c file in your currentd dir\n\t\e[1m\e[33mmake rm\n\t\e[0mThis will remove the main executable created\n\t\e[1m\e[33mmake debug args=test.c\n\t\e[0mThis will use the debug option which has more flags related to debugging\n"
+}
+
+function make_a_makefile(){
+    if [[ '$1' = 'C'|| '$1' = 'c' ]];then
+        makefile "c" 
+    elif [[ '$1' = 'CC'|| '$1' = 'cc' ]];then
+        makefile "cpp"
+    else
+        Error
+    fi
+}
+
+#--------------------------------End of Functions-------------------------------#
+
+
+if [[ $# -eq 0 ]];then
+    Error
+exit 1
+fi
+
+if [[ $# -eq 1 ]];then
+    make_a_makefile "$1"
+else
+    Error
+    exit 1
+fi
+
+
+
+
