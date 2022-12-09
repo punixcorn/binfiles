@@ -1,0 +1,37 @@
+#ok so your bluetooth is pooped because you are running bleeding edge linux
+#kernel, thats the problem , stop living on bleeding edge Ok::
+
+# solution
+#::stole from the stack overflow for linux;
+# I had this problem with VanillaArch on Linux Kernel 5.12. After struggling for a day I found the problem is:
+
+# 1. Some of bluetooth devices firmware are not available in the new linux libraries right out of the box and you need to find. for this problem you can refer to the following repo. In readme it's well documented what you should do. basically you 'd download and copy the frimware in
+
+#    /lib/firmware/brcm
+
+#for Broadcom Bluetooth devices.
+#https://github.com/winterheart/broadcom-bt-firmware
+
+# 2. Activation of two conflicting services on Bluetooth. Referring to "SayantanRC" on Arch froum :
+
+# When I compared between the two, I found these two services were enabled on my Manjaro installation, but disabled on my Arch linux installation:
+
+#blueman-mechanism.service
+#bluetooth-mesh.service
+
+#//main: run these commands
+#    Disabled them and rebooted.
+
+#!/bin/bash
+sudo systemctl disable blueman-mechanism.service
+sudo systemctl disable bluetooth-mesh.service
+echo "do you want to reboot now? [Y/n] "
+read answer
+
+if [[ "$answer" = y ]] || [[ "$answer" = Y ]]; then
+    echo "rebooting"
+    sudo reboot now
+else
+    echo "not rebooting"
+fi
+
