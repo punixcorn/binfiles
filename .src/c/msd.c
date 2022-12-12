@@ -7,7 +7,7 @@ void Perror(void) {
            "sda1\n");
 }
 void mountsd(char *str1, char *str2) {
-  input("sudo mount /dev");
+  input("sudo mount /dev/");
   if (*(str1 + 0) == '/' && *(str2 + 0) != '/') {
     input(str2);
     input(" ");
