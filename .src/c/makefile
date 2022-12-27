@@ -1,7 +1,6 @@
-CC=gcc
+CC=cc
 FLAGS= -std=c99 -W -O2 -g -Wextra 
 EFLAGS= -s -save-temnps -O2 -Werror
-RM= rm
 
 default:
 	$(CC) $(args) -o main $(FLAGS)
@@ -15,7 +14,10 @@ binHeaders.o:
 debug:
 	$(CC) $(args) -o main $(EFLAGS) $(FLAGS)
 
+debugbin : binHeaders.o
+	$(CC) $(args) -o main $(EFLAGS) $(FLAGS)
+
 Clean:
-	$(RM) main
-	$(RM) *.o
-	$(RM) *.gch
+	@rm main
+	@rm *.o
+	@rm *.gch
