@@ -7,7 +7,7 @@ void stderror(char *arg) {
          "printf \"\\e[31mInvalid arguments passed\n\\e[31m***\t\\e[33mprogram "
          "terminated\n\\e[32musage:\n\t\\e[0m");
   strcat(error, arg);
-  strcat(error,"\" 2> \/dev\/null");
+  strcat(error, "\" 2> \/dev\/null");
   system(error);
   exit(0);
 }

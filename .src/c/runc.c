@@ -10,6 +10,7 @@ void runc(char *string) {
 }
 int main(int argc, char **argv) {
   if (argc == 1) {
+    printf("looking for a main.c to run\n");
     runc("main.c");
   } else if (argc == 2) {
     runc(*(argv + 1));
