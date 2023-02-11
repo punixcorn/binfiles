@@ -198,30 +198,32 @@ int getdir(char *place, char *thing) {
 void print_format(FILE *std, int exit_v, char *exe_name) {
   fprintf(std, "%s : %s [ %s... ]\n", "Usage", exe_name, "options");
   fprintf(std,
-          "-h              print this message*\n"
+          "-h              print this message *\n"
           "-i              initialize a repository\n"
           "-c              add and commit\n"
           "-m 'message'    add a message\n"
-          "-b 'branch'     create a branch*\n"
-          "-s 'branch'     switch to a branch*\n"
-          "-o 'user/repo'  add an origin*\n"
-          "-l              pull from repo*\n"
-          "-p              push to repo*\n"
-          "-v              NULL*\n"
-          "-g              show git log files*\n"
-          "-t              show git status*\n"
-          "-d 'branch'     delete a branch*\n"
-          "+++ These features do not seem to work +++"
+          "-b 'branch'     create a branch *\n"
+          "-s 'branch'     switch to a branch *\n"
+          "-o 'user/repo'  add an origin *\n"
+          "-l              pull from repo *\n"
+          "-p              push to repo *\n"
+          "-v              NULL *\n"
+          "-g              show git log files *\n"
+          "-t              show git status *\n"
+          "-d 'branch'     delete a branch *\n"
+          "\n+++ These features do not seem to work +++\n"
           "-r 'repo_name'  create an online repo[ the name of your new repo ]\n"
           "-u 'user_name'  needed to create online repo[ your user name ]\n"
           "-y 'des'        needed to create an online repo[ the description ]\n"
-          " +++ fixing it up +++"
+          " +++ fixing it up +++\n"
           "\nFeatures to be added soon\n"
           " -&& 'args'      add extra aguments\n"
           " -r 'id'         make a reverse to a commit id\n"
           " --              a git diff\n"
+          " --              view your branches\n"
+          " -- 'bool'       help the commit without an initialization\n"
           "\nThis is just a simple alias for git\n"
-          "all options that end with * denotes they must be used alone\n"
+          "all options that end with [ * ] denotes they must be used alone\n"
           "\nExample:\n");
 
   fprintf(std,
@@ -229,14 +231,24 @@ void print_format(FILE *std, int exit_v, char *exe_name) {
           "initialize a git repo, add all files and commit with the message "
           "'initial commt'\n",
           exe_name);
+  // verbose
   fprintf(std,
           "\nSide Notes:\n"
-          "can: commit a repository without initializing it, it will "
-          "automatically do it\n"
-          "can: not specify the files to add, it will automatically add all\n"
-          "can: create an online github repository, but all 3 options [-r -u "
-          "-y ]should be filled\n"
-          "more Notes will be made\n");
+          "Can : commit a repository without initializing it, it will "
+          "automatically do it\nExample:\n"
+          "\n\t%s -c -m \"This is a commit made in an uninitialized folder\"\n"
+          "But this has it own bugs as if you were in a sub-folder it would "
+          "not be able to tell\n"
+          "Hence the need for another option to let it know if you your "
+          "already in a git folder\n"
+          "But due to specifing this always, i will just remove it, feels like "
+          "a bigger issue, than just specifing once\n"
+          "Can : not specify the files to add, it will automatically add all\n"
+          "Can : create an online github repository, but all 3 options [-r -u "
+          "-y ]should be filled [ This feature has be outdated, but working on "
+          "it ]\n"
+          "more Notes will be made\n",
+          exe_name);
 
   exit(exit_v);
 }
