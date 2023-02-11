@@ -1,18 +1,12 @@
 ## Binaries
 
-these are binaries i wrote in C and bash and complied and put them in a folder exported to path so i can call from anywhere
+these are binaries i wrote in C and bash and complied and put them in a folder exported to path so i can call from anywhere, lil shortcuts
 
-it would be better to **write them in bash** , bash scripts take half the space and they are easier to edit or write but i chosse **C/C++**
+###### as of now not all are written in C ( mostly )
 
-###### as of now not all are written in C
+all the C code does is parse the text you pass into into it and translates and arranges them accordingly
 
-because am currently learning that , they still work, all the C code does is parse the text you pass into into it and translates and arranges them accordingly
-
-and calls the **system()** function to out them into the terminal, nothing big or complicated
-
-###### will soonbe rewritten to use the syscalls instead of calling **system()**
-
-###### found out mostly there is no reason to rewrite them in syscalls since the linux functions are just wrappers
+and calls the **system()** function to run it , so think of it like an alias
 
 ### Install
 
@@ -24,9 +18,6 @@ most **errors** are from the bashfiles not having the right permissions
 
 if **makefolderExecutable** doesnt run , make it executable by
 `sudo chmod 777 makefolderExecutable`
-
-if **makehere** doesnt run , make it an executable by
-`sudo chmod 777 makehere`
 
 ### Source Files
 
