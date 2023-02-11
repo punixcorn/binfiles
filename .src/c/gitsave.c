@@ -36,10 +36,11 @@ int main(int argc, char *argv[]) {
   /* local variables */
   int opt, optind;
   struct trip ntrip = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  // r: = repo name
-  // u: user name
-  // y : repo description
-  // d: delete branch
+  /*if an ignore variable is given
+   * we make check true, run normally
+   * so as to no create a hell
+   *
+   * */
   while ((opt = getopt(argc, argv, ":hica:m:b:s:lpo:ve:gd:r:u:y:t")) != -1) {
     switch (opt) {
     case 'i':
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]) {
       ntrip.commit = 1;
       break;
     case 'a':
+      // add files
       opt_add = optarg;
       ntrip.add = 1;
       break;
@@ -60,16 +62,16 @@ int main(int argc, char *argv[]) {
       opt_message = optarg;
       break;
     case 'b':
+      // create branch
       if (ntrip.switch_) {
         fprintf(stderr, "%s\n", "ERR: cannot used -d && -s together");
         exit(1);
       }
-      // branch
       ntrip.branch = 1;
       opt_branch = optarg;
       break;
     case 's':
-      // branch
+      // switch branch
       if (ntrip.branch) {
         fprintf(stderr, "%s\n", "ERR: cannot used -d && -s together");
         exit(1);
@@ -94,7 +96,7 @@ int main(int argc, char *argv[]) {
       ntrip.push = 1;
       break;
     case 'o':
-      // push
+      // add origin
       opt_origin = optarg;
       ntrip.origin = 1;
       break;
@@ -107,32 +109,40 @@ int main(int argc, char *argv[]) {
       fprintf(stdout, "%s\n", "thinking of what -v should do");
       break;
     case 'e':
+      // merge
       opt_branch = optarg;
       ntrip.merge = 1;
       break;
     case 'g':
+      // log
       ntrip.log = 1;
       break;
     case 't':
+      // status
       ntrip.status = 1;
       break;
     case 'd':
+      // delete branch
       ntrip.deleteBranch = 1;
       opt_branch = optarg;
       break;
     case 'r':
+      // repo : name
       ntrip.repoName = 1;
       opt_repoName = optarg;
       break;
     case 'u':
+      // repo : user
       ntrip.User = 1;
       opt_user = optarg;
       break;
     case 'y':
+      // repo : description
       ntrip.repoDes = 1;
       opt_description = optarg;
       break;
     case ':':
+      // errors
       fprintf(stderr, "option  needs a value\n\tTry -h for help\n");
       exit(EXIT_FAILURE);
       break;
@@ -145,20 +155,11 @@ int main(int argc, char *argv[]) {
   }
 
   /* extra checks before running main logic */
-  /*  if (optind >= argc) {
-      fprintf(stderr, "Expected argument after options\n");
-      exit(EXIT_FAILURE);
-    }
-  */
   int prechecker = ntrip.push + ntrip.pull + ntrip.merge + ntrip.origin +
                    ntrip.switch_ + ntrip.branch + ntrip.status + ntrip.log;
 
   int repochecker = ntrip.repoName + ntrip.repoDes + ntrip.User;
-  if (prechecker > 1) {
-    fprintf(stderr, "%s : Invalid options used together\n", *argv + 0);
-    exit(EXIT_FAILURE);
-  }
-  if (repochecker == 2 || repochecker == 1) {
+  if (prechecker > 1 || (repochecker == 2 || repochecker == 1)) {
     fprintf(stderr, "%s : Invalid options used together\n", *argv + 0);
     exit(EXIT_FAILURE);
   }
@@ -166,6 +167,10 @@ int main(int argc, char *argv[]) {
 
   /* main logic */
   run(&ntrip, command);
+  if (optind >= argc) {
+    fprintf(stderr, "Expected argument after options\n");
+    exit(EXIT_FAILURE);
+  }
 
   exit(EXIT_SUCCESS);
 }
@@ -424,7 +429,8 @@ void run(struct trip *T, char *s) {
 
   /* message trip */
   if (T->message && T->commit) {
-    input(opt_message);
+    runNcheck("'", opt_message, "'");
+    // input(opt_message);
   } else if (!T->message && T->commit) {
     input(" 'commit made' ");
   }
