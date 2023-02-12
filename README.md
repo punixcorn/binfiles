@@ -10,14 +10,11 @@ and calls the **system()** function to run it , so think of it like an alias
 
 ### Install
 
-clone the folder to home and run the **makefolderExecutable** (in .src) to automatically add the folder to path or you can do it mannually
+clone the folder add the folder to path
 
 ### Errors
 
 most **errors** are from the bashfiles not having the right permissions
-
-if **makefolderExecutable** doesnt run , make it executable by
-`sudo chmod 777 makefolderExecutable`
 
 ### Source Files
 

@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'v':
       // verbose
-      fprintf(stdout, "%s\n", "verbose enabled\n");
+      fprintf(stdout, "%s\n", "verbose enabled**");
       ntrip.verbose = 1;
       break;
     case 'e':
@@ -211,8 +211,8 @@ void print_format(FILE *std, int exit_v, char *exe_name) {
       "-s 'branch'     switch to a branch *\n"
       "-d 'branch'     delete a branch *\n"
       "-l              pull from repo *\n"
-      "-p              push to repo *\n"
-      "-v              NULL *\n"
+      "-p              push to repo\n"
+      "-v              print out the current running code *\n"
       "-g              show git log files *\n"
       "-t              show git status *\n"
       "-o 'user/repo'  add an origin *\n"
