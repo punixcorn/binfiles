@@ -1,46 +1,50 @@
 /* Copyright 2023 potato */
 #include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 /* global variables */
 char command[2048];
-char *optarg, *opt_message, *opt_branch, *opt_origin, *opt_add, *opt_user,
-    *opt_repoName, *opt_description, *githubCreate;
-
+char *optarg, *opt_message, *opt_branch, *opt_origin, *opt_add, *opt_repoName,
+    *opt_description, *githubCreate, *opt_view;
 struct trip {
   int init, commit, add, message, branch, switch_, merge, pull, push, origin,
-      log, status, deleteBranch, repoName, repoDes, User;
+      log, status, deleteBranch, repoName, repoDes, mode, verbose;
 };
 
-/* functions Order matters */
+/* ===== functions, order matters ====== */
+
+/* searches for the file 'thing' in the path 'place' */
 int getdir(char *place, char *thing);
+/* prints the help message and exits the program with the number exit_v */
 void print_format(FILE *std, int exit_v, char *exe_name);
-void input(char *s2);
-void end(char *ss);
-void addCmdRepo(int a);
-/* they might be the same but they arent */
+/* copys the string in s2 to command */
+void input(char *s1);
+/* puts the string ss in system to be runned */
+void end(char *ss, int v);
+/* made for the creation of onlin repository */
+void addCmdRepo(int a, int v);
+/* copies the string s1 s2 s3 into command */
 void runNcheck(char *s1, char *s2, char *s3);
-void runCheck(char *mainstr, char *s1, char *s2, int gitdir);
-/* ====================================== */
+/* copies the string s1 s2 into mainstr and passes mainstr into system() */
+void runCheck(char *mainstr, char *s1, char *s2, int v);
+/* the logic of this application, makes decisions based on the values of the
+ * struct passed in, s is the app name */
 void run(struct trip *T, char *s);
 
-/* main function */
+/* ========= main function  =========== */
 int main(int argc, char *argv[]) {
   if (argc == 1) {
     fprintf(stderr, "%s : Invalid option passed\n", *argv + 0);
     print_format(stderr, 1, *argv + 0);
   }
-
   /* local variables */
   int opt, optind;
-  struct trip ntrip = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  /*if an ignore variable is given
-   * we make check true, run normally
-   * so as to no create a hell
-   *
-   * */
+  /* initializing the struct to false */
+  struct trip ntrip = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
   while ((opt = getopt(argc, argv, ":hica:m:b:s:lpo:ve:gd:r:u:y:t")) != -1) {
     switch (opt) {
     case 'i':
@@ -106,7 +110,8 @@ int main(int argc, char *argv[]) {
       break;
     case 'v':
       // verbose
-      fprintf(stdout, "%s\n", "thinking of what -v should do");
+      fprintf(stdout, "%s\n", "verbose enabled\n");
+      ntrip.verbose = 1;
       break;
     case 'e':
       // merge
@@ -133,8 +138,8 @@ int main(int argc, char *argv[]) {
       break;
     case 'u':
       // repo : user
-      ntrip.User = 1;
-      opt_user = optarg;
+      ntrip.mode = 1;
+      opt_view = optarg;
       break;
     case 'y':
       // repo : description
@@ -158,7 +163,7 @@ int main(int argc, char *argv[]) {
   int prechecker = ntrip.push + ntrip.pull + ntrip.merge + ntrip.origin +
                    ntrip.switch_ + ntrip.branch + ntrip.status + ntrip.log;
 
-  int repochecker = ntrip.repoName + ntrip.repoDes + ntrip.User;
+  int repochecker = ntrip.repoName + ntrip.repoDes + ntrip.mode;
   if (prechecker > 1 || (repochecker == 2 || repochecker == 1)) {
     fprintf(stderr, "%s : Invalid options used together\n", *argv + 0);
     exit(EXIT_FAILURE);
@@ -167,6 +172,7 @@ int main(int argc, char *argv[]) {
 
   /* main logic */
   run(&ntrip, command);
+  /* final checks */
   if (optind >= argc) {
     fprintf(stderr, "Expected argument after options\n");
     exit(EXIT_FAILURE);
@@ -175,10 +181,8 @@ int main(int argc, char *argv[]) {
   exit(EXIT_SUCCESS);
 }
 
-/* end of main function */
+/* ======= end of main function ========= */
 
-/* functions */
-/* getdir : looks in current folder to see if it has a git repo in it */
 int getdir(char *place, char *thing) {
   DIR *d;
   struct dirent *dir;
@@ -187,87 +191,67 @@ int getdir(char *place, char *thing) {
     while ((dir = readdir(d)) != NULL) {
       if (strcmp(dir->d_name, thing) == 0) {
         closedir(d);
-        return 1;
+        return 0;
       }
     }
   }
-  return 0;
+  return 1;
 }
 
-/* print_format : prints the help message */
 void print_format(FILE *std, int exit_v, char *exe_name) {
   fprintf(std, "%s : %s [ %s... ]\n", "Usage", exe_name, "options");
-  fprintf(std,
-          "-h              print this message *\n"
-          "-i              initialize a repository\n"
-          "-c              add and commit\n"
-          "-m 'message'    add a message\n"
-          "-b 'branch'     create a branch *\n"
-          "-s 'branch'     switch to a branch *\n"
-          "-o 'user/repo'  add an origin *\n"
-          "-l              pull from repo *\n"
-          "-p              push to repo *\n"
-          "-v              NULL *\n"
-          "-g              show git log files *\n"
-          "-t              show git status *\n"
-          "-d 'branch'     delete a branch *\n"
-          "\n+++ These features do not seem to work +++\n"
-          "-r 'repo_name'  create an online repo[ the name of your new repo ]\n"
-          "-u 'user_name'  needed to create online repo[ your user name ]\n"
-          "-y 'des'        needed to create an online repo[ the description ]\n"
-          " +++ fixing it up +++\n"
-          "\nFeatures to be added soon\n"
-          " -&& 'args'      add extra aguments\n"
-          " -r 'id'         make a reverse to a commit id\n"
-          " --              a git diff\n"
-          " --              view your branches\n"
-          " -- 'bool'       help the commit without an initialization\n"
-          "\nThis is just a simple alias for git\n"
-          "all options that end with [ * ] denotes they must be used alone\n"
-          "\nExample:\n");
-
-  fprintf(std,
-          "%s -i -c -m 'initial commit'\n"
-          "initialize a git repo, add all files and commit with the message "
-          "'initial commt'\n",
-          exe_name);
-  // verbose
-  fprintf(std,
-          "\nSide Notes:\n"
-          "Can : commit a repository without initializing it, it will "
-          "automatically do it\nExample:\n"
-          "\n\t%s -c -m \"This is a commit made in an uninitialized folder\"\n"
-          "But this has it own bugs as if you were in a sub-folder it would "
-          "not be able to tell\n"
-          "Hence the need for another option to let it know if you your "
-          "already in a git folder\n"
-          "But due to specifing this always, i will just remove it, feels like "
-          "a bigger issue, than just specifing once\n"
-          "Can : not specify the files to add, it will automatically add all\n"
-          "Can : create an online github repository, but all 3 options [-r -u "
-          "-y ]should be filled [ This feature has be outdated, but working on "
-          "it ]\n"
-          "more Notes will be made\n",
-          exe_name);
+  fprintf(
+      std,
+      "-h              print this message *\n"
+      "-i              initialize a repository\n"
+      "-c              add and commit\n"
+      "-a 'files'      add files only\n"
+      "-m 'message'    add a message\n"
+      "-b 'branch'     create a branch *\n"
+      "-s 'branch'     switch to a branch *\n"
+      "-d 'branch'     delete a branch *\n"
+      "-l              pull from repo *\n"
+      "-p              push to repo *\n"
+      "-v              NULL *\n"
+      "-g              show git log files *\n"
+      "-t              show git status *\n"
+      "-o 'user/repo'  add an origin *\n"
+      "-r 'repo_name'  create an online repo[ the name of your new repo ]\n"
+      "-u 'mode'       needed to create online repo [ private or public "
+      "repo ]\n"
+      "-y 'des'        needed to create an online repo[ the description ]\n"
+      "\nThis is just a simple alias for git\n"
+      "Example:\n"
+      "%s -i -c -m 'initial commit'\n"
+      "initialize a git repo, add all files and commit with the message "
+      "'initial commt'\n"
+      "\nif you want to create online repos from here, make sure you have "
+      "the file githubToken in /usr "
+      "with your token in it\n"
+      "To create an online repo, use all 3 options [ -r <repo name> -u <bool> "
+      "-y <description> ]\n"
+      "Example:\n\t%s -r \"my_repo\" -u \"true\" -y \"this is my new "
+      "repo\"\n"
+      "Where <mode> := \"true\" or \"false\"\n"
+      "if true, the repository will be private, and not if false\n"
+      "If all 3 options arent filled, the program will terminate\n"
+      "\nNB: "
+      "all options that end with [ * ] denotes they must be used alone\n",
+      exe_name, exe_name);
 
   exit(exit_v);
 }
-// sooon
-//  r = reverse : git reverse commit id
-//  d = git diff srcb curb : view cahnges before mergeing
-//  v = git log --summary : view evertyhing
-//  git add -A : add only new files
-//  create a github repo here
-// list the branches
-/* input: puts into command */
-void input(char *s2) {
-  if (s2 != NULL)
-    strcat(command, s2);
+
+void input(char *s1) {
+  if (s1 != NULL)
+    strcat(command, s1);
 }
 
-/* passes the string ss into system() and exits */
-void end(char *ss) {
+void end(char *ss, int v) {
   if (ss != NULL) {
+    if (v) {
+      fprintf(stdout, "Command generated: %s\n", ss);
+    }
     system(ss);
     exit(EXIT_SUCCESS);
   } else {
@@ -276,8 +260,6 @@ void end(char *ss) {
   }
 }
 
-/* runNcheck : this function takes in 3 strings s1,s2,s3 and if none is NULL
- * will concat it to the string command */
 void runNcheck(char *s1, char *s2, char *s3) {
   if (s1 != NULL && s2 != NULL && s3 != NULL) {
     input(s1);
@@ -286,96 +268,114 @@ void runNcheck(char *s1, char *s2, char *s3) {
   }
 }
 
-void addCmdRepo(int a) {
-  /* strings we need */
-  char crepo[500] = {'\0'};
-  if (a == 1) {
-    sprintf(
-        crepo,
-        "curl '%s' https://api.github.com/%s/repos -d "
-        "'{\"name\":\"%s\",\"description\":\"%s\"}' && git remote add origin "
-        "git@github.com:%s/%s.git && git branch -M main && git push -u "
-        "origin main",
-        opt_user, opt_user, opt_repoName, opt_description, opt_user,
-        opt_repoName);
-    /*probably read token from a file
-    curl \
-  -X POST \
-  -H "Accept: application/vnd.github+json" \
-  -H "Authorization: Bearer <YOUR-TOKEN>"\
-  -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/user/repos \
-  -d '{"name":"Hello-World","description":"This is your first
-  repo!","homepage":"https://github.com","private":false,"is_template":true}'
-  */
-    end(crepo);
+void addCmdRepo(int a, int v) {
+  char token[100];
+  char crepo[500];
+  char confirm;
+  if (!a) {
+    int check = getdir("/usr", "githubToken");
+    if (check) {
+      fprintf(stderr,
+              "ERROR:\n"
+              "the file githubToken was not found in /usr\n"
+              "Please create the file and put only your github token inside\n"
+              "This file is needed to do any creation of repositories\n");
+      exit(0);
+    }
+    /* getting the token */
+    FILE *token_file;
+    token_file = fopen("/usr/githubToken", "r");
+    if (token_file == NULL) {
+      fprintf(stderr,
+              "ERR: error occured with file githubToken\n"
+              "Please make sure it only contains your github token\n"
+              "errno: %d\n",
+              errno);
+      exit(1);
+    }
+    fread(token, 40, 1, token_file);
+    if (opt_view == NULL || opt_description == NULL || opt_repoName == NULL ||
+        (strcmp(opt_view, "true") && strcmp(opt_view, "false"))) {
+      fprintf(stderr,
+              "One of the options used is doesnt have any data in it's field\n"
+              "Or the value of -u is incorrect\n");
+      exit(1);
+    }
+    fprintf(stdout,
+            "You are about to create an online repository with the following "
+            "data :\n"
+            "\tName of repository : %s\n"
+            "\tDescription : %s\n"
+            "\tPrivate: %s\n"
+            "continue with creation of the online repository [Y,n] : ",
+            opt_repoName, opt_description, opt_view);
+    scanf("%c", &confirm);
+    if (confirm == 'N' || confirm == 'n') {
+      fprintf(stdout, "\noperation cancelled\n");
+      exit(0);
+    }
+    sprintf(crepo,
+            "curl -X POST -H \"Authorization: Bearer %s\""
+            " https:\/\/api.github.com\/user\/repos -d "
+            "'{\"name\":\"%s\",\"description\":\"%s\",\"homepage\":\"https:"
+            "\/\/github.com\",\"private\":%s}'",
+            token, opt_repoName, opt_description, opt_view);
+    end(crepo, v);
   } else {
-    fprintf(stderr, "ERR : %s\n%s", "The application curl is needed",
+    fprintf(stderr, "ERR : %s\n%s\n", "The application curl is needed",
             "Install to use this feature");
     exit(1);
   }
 }
 
-/*runCheck : This function takes in 3 strings mainstr,s1,s2  and int gitdir
- * it treats the first string as the mainstring to concat the other 2 strings
- * into s1 will flush mainstr with it's contents and s2 will concat to mainstr
- * after the flush if gitdir is 1 this operation will run, else it will not
- * */
-void runCheck(char *mainstr, char *s1, char *s2, int gitdir) {
-  if (gitdir) {
-    strcpy(mainstr, s1);
-    strcat(mainstr, s2);
-    end(mainstr);
-  } else {
-    fprintf(stderr, "%s :  %s\n", "ERR",
-            "Git repository not found in current location");
-  }
+void runCheck(char *mainstr, char *s1, char *s2, int v) {
+  strcpy(mainstr, s1);
+  strcat(mainstr, s2);
+  end(mainstr, v);
   exit(EXIT_FAILURE);
 }
 
 void run(struct trip *T, char *s) {
-  int check = getdir(".", ".git");
-
-  /* ======================= Stuff that needs to run once */
+  /* ------- start of single checks -------- */
 
   /* branch */
   if (T->branch) {
-    runCheck(s, "git branch ", opt_branch, check);
+    runCheck(s, "git branch ", opt_branch, T->verbose);
   }
 
   /* switch */
   if (T->switch_) {
-    runCheck(s, "git switch ", opt_branch, check);
+    runCheck(s, "git switch ", opt_branch, T->verbose);
   }
 
   /* Pull */
   if (T->pull) {
-    runCheck(s, "git pull", " ", check);
+    runCheck(s, "git pull", " ", T->verbose);
   }
 
   /* push */
   if (T->push && !T->commit) {
-    runCheck(s, "git push", " ", check);
+    runCheck(s, "git push", " ", T->verbose);
   }
 
   /* push */
   if (T->log) {
-    runCheck(s, "git log", " ", check);
+    runCheck(s, "git log", " ", T->verbose);
   }
   /* status */
   if (T->status) {
-    runCheck(s, "git status", " ", check);
+    runCheck(s, "git status", " ", T->verbose);
   }
 
   /* delete branch */
   if (T->deleteBranch) {
-    runCheck(s, "git branch -D ", opt_branch, check);
+    runCheck(s, "git branch -D ", opt_branch, T->verbose);
   }
 
   /* === User repo creation ===*/
-  if (T->User && T->repoName && T->repoDes) {
+  if (T->mode && T->repoName && T->repoDes) {
     int curlcheck = getdir("/usr/bin/", "curl");
-    addCmdRepo(curlcheck);
+    addCmdRepo(curlcheck, T->verbose);
   }
 
   /* origin */
@@ -385,23 +385,19 @@ void run(struct trip *T, char *s) {
             "git remote add origin git@github.com:%s && git branch -M "
             "main && git push -u origin main",
             opt_origin);
-    runCheck(s, stemp, "", check);
+    runCheck(s, stemp, "", T->verbose);
   }
 
   /* merge */
   if (T->merge) {
-    runCheck(s, "git merge ", opt_branch, check);
+    runCheck(s, "git merge ", opt_branch, T->verbose);
   }
 
-  /*==== end of stuff ========================= */
+  /* ----- end of single checks ------ */
+
   /* init trip */
   if (T->init) {
-    if (check) {
-      fprintf(stdout, "%s\n", "git repo already initialized, skipping...\n");
-      T->init = 0;
-    } else {
-      input("cd $(pwd) && git init ");
-    }
+    input("cd $(pwd) && git init ");
   }
 
   /* commit trip */
@@ -413,18 +409,10 @@ void run(struct trip *T, char *s) {
         input("&& git add . && git commit -m ");
       }
     } else {
-      if (check) {
-        if (T->add) {
-          runNcheck("git add ", opt_add, " && git commit -m ");
-        } else {
-          input("git add . && git commit -m ");
-        }
+      if (T->add) {
+        runNcheck("git add ", opt_add, " && git commit -m ");
       } else {
-        if (T->add) {
-          runNcheck("git init && git add ", opt_add, " && git commit -m ");
-        } else {
-          input("git init && git add . && git commit -m ");
-        }
+        input("git add . && git commit -m ");
       }
     }
   }
@@ -436,7 +424,7 @@ void run(struct trip *T, char *s) {
     } else if (!T->init) {
       runNcheck("git add ", opt_add, " ");
     }
-    end(s);
+    end(s, T->verbose);
   }
 
   /* message trip */
@@ -450,7 +438,17 @@ void run(struct trip *T, char *s) {
   if (T->push) {
     input(" && git push");
   }
-  end(s);
+  end(s, T->verbose);
 }
 
-// must alias  git log, git status ...
+// must alias
+// git log, git status ...
+//  -- = reverse : git reverse commit id
+//  -- = git diff srcb curb : view cahnges before mergeing
+//  -- = git log --summary : view evertyhing
+//  -- = git add -A : add only new files
+//  -- = list the branches
+//  -& 'args'       add extra aguments
+//  -- 'id'         make a reverse to a commit id
+//  --              a git dif
+//  --              view your branches

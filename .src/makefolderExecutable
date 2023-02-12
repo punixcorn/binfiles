@@ -1,28 +1,21 @@
 #!/bin/bash
-
-<<COMMENTS
-this executable is to add this current folder to path so the 
-executables in this folder can be launched anywhere without
-needing the full path
-by default it echoes into .zshrc
-if you use any other eg: .bashrc, .bashprofile, etc make changes
-COMMENTS
-#sometimes $HOME DOESNT WORK
+# sometimes $HOME DOESNT WORK
+#i dunno what the fuck this code is 
 DIR=$(pwd)
-function make(){
-echo "#personal executables folder" >> $HOME/$1
-echo "export PATH='\$PATH:$DIR'" >> $HOME/$1
-source $HOME/$1
+function makef(){
+    echo '# personal executables folder' >> $HOME/$1
+    echo "export PATH='\$PATH:$DIR/../'" >> $HOME/$1
 }
-read -p "what is your shell file? default: .zshrc : "
-if [ -f $HOME/$REPLY ];then
-  make "$REPLY"
+echo "what is your shell file [ .bashrc or .zshrc ]? default: .zshrc : "
+read shell_name
+if [ -f "$HOME/$shell_name" ];then
+  makef $shell_name
 else
   echo "file not found"
-  if [ -f $HOME/.zshrc ];then
-    echo "zshrc found, placing there"
-    make ".zshrc"
-  else
-    echo "zshrc not found, program terminated"
+  if [ -f "$HOME/.zshrc" ];then
+      echo "zshrc found, placing there" && makef ".zshrc" || echo "Error occured whiles placing in .zshrc"
+     else
+      echo "zshrc not found, running on .bashrc"
+      [ -f "$HOME/.bashrc" ] && makef ".bashrc" || echo "Could not find .bashrc"
   fi
 fi

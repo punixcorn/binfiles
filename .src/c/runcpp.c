@@ -1,20 +1,32 @@
-#include "binHeaders.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 char command[100]; // input puts into command
-void runcpp(char *string) {
-  input("cd $(pwd) && clang++ -o main ");
-  input(string);
-  input(" && ./main");
+
+void runcpp(char *str) {
+  sprintf(command, "g++ %s -o main -g --std=c++14 && ./main", str);
   system(command);
   exit(0);
 }
+
 int main(int argc, char **argv) {
   if (argc == 1) {
     runcpp("main.cpp");
   } else if (argc == 2) {
+    if (*(*(argv + 1)) == '-' && *(*(argv + 1) + 1) == 'h') {
+      fprintf(stdout,
+              "Useage : %s [ options... ]\n"
+              "file.cpp              file to run\n"
+              "-h                    print this message\n"
+              "[ no arguments  ]     looks for a main.cpp file to run\n",
+              *(argv));
+      exit(0);
+    }
     runcpp(*(argv + 1));
   } else {
-    stderror(
-        "runcpp <file_name>\n\\e[32mexample:\n\t\\e[0m$ runcpp doom.cpp\n\tif "
-        "no argument is passed, it will look for 'main.cpp' file to run\n");
+    fprintf(stderr,
+            "%s : error, invalid arguments passed\n"
+            "try %s -h for help\n",
+            *(argv), *(argv));
   }
 }

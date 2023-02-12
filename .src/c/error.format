@@ -1,0 +1,10 @@
+For error formats : 
+
+if help:
+Usage : name [ options ... ]
+-h         print this message 
+-o         do something
+
+if invalid argument:
+name : error, invalid arguments passed...
+try -h for help 

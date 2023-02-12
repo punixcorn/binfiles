@@ -1,6 +1,11 @@
-#include "binHeaders.h"
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 char command[100], place[2][50]; // input() puts into command
+
 int i = 1;
 typedef struct {
   _Bool pTrip;
@@ -9,20 +14,30 @@ typedef struct {
 Trip trip;
 
 void sort(char *str);
-void run(void);
+void run(char *exe_name);
+
 int main(int argc, char **argv) {
   if (argc >= 2) {
+    if (*(*(argv + 1)) == '-' && *(*(argv + 1) + 1) == 'h') {
+      fprintf(stdout,
+              "Usage : %s [ path ] [ file/directory ]\n"
+              "if a path is not included, it will start from \"\/\"\n",
+              *(argv));
+      exit(0);
+    }
     goto arg;
   } else if (argc == 1)
-    stderror("findfile <file/dir> <location>\nexample:\n\tfindfile main.cpp "
-             "/mnt\n\tif no location passed it will start at \" \\ \"\n");
-  exit(0);
+    fprintf(stderr,
+            "ERR: invalid arguments passed\n"
+            "Usage: %s [ options... ]\n",
+            *(argv));
+  exit(1);
 arg:
   while (i < argc) {
     sort(*(argv + i));
     i++;
   }
-  run();
+  run(*(argv));
   exit(0);
 }
 
@@ -39,22 +54,23 @@ void sort(char *str) {
   }
 }
 
-void run(void) {
-  input("sudo find ");
+void run(char *exe_name) {
+  sprintf(command, "sudo find ");
   if (trip.pTrip) {
-    input(*place);
+    strcat(command, *place);
   } else {
-    input("/");
+    strcat(command, "/");
   }
-  input(" -iname '");
+  strcat(command, " -iname '");
   if (trip.fTrip) {
-    input(*(place + 1));
+    strcat(command, *(place + 1));
   } else {
-    stderror("findfile <dir/name> <name>\n\\e[32mexample:\n\t\\e[0m$ "
-             "findfile /home findfile.c\n"
-             "\tif no <dir> is given, it will default to '/'\n");
-    exit(0);
+    fprintf(stderr,
+            "ERR: invalid arguments passed\n"
+            "Usage: %s [ options... ]\n",
+            exe_name);
+    exit(1);
   }
-  input("' 2> /dev/null");
+  strcat(command, "' 2> /dev/null");
   system(command);
 }

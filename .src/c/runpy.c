@@ -1,18 +1,32 @@
-#include "binHeaders.h"
 #include <stdio.h>
-char command[100]; // commandis puts into command
-void runc(char *string) {
-  commandis("cd $(pwd) && python3 ");
-  commandis(string);
+#include <stdlib.h>
+#include <string.h>
+char command[100]; // input puts into command
+
+void runpy(char *str) {
+  sprintf(command, "python3 %s", str);
   system(command);
+  exit(0);
 }
+
 int main(int argc, char **argv) {
   if (argc == 1) {
-    runc("main.py");
-  } else if (argc > 1) {
-    runc(*(argv + 1));
+    runpy("main.py");
+  } else if (argc == 2) {
+    if (*(*(argv + 1)) == '-' && *(*(argv + 1) + 1) == 'h') {
+      fprintf(stdout,
+              "Useage : %s [ options... ]\n"
+              "file.py               file to run\n"
+              "-h                    print this message\n"
+              "[ no arguments  ]     looks for a main.py file to run\n",
+              *(argv));
+      exit(0);
+    }
+    runpy(*(argv + 1));
   } else {
-    printf("either main file not found or file passed as argument not found\n");
+    fprintf(stderr,
+            "%s : error, invalid arguments passed\n"
+            "try %s -h for help\n",
+            *(argv), *(argv));
   }
-  exit(0);
 }

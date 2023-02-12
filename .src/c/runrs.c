@@ -1,18 +1,32 @@
-#include "binHeaders.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 char command[100]; // input puts into command
-void runc(char *string) {
-  input("cd $(pwd) && rustc -o main ");
-  input(string);
-  input(" && ./main");
+
+void runrs(char *str) {
+  sprintf(command, "rustc %s -o main && ./main ", str);
   system(command);
+  exit(0);
 }
+
 int main(int argc, char **argv) {
   if (argc == 1) {
-    runc("main.rs");
-  } else if (argc > 1) {
-    runc(*(argv + 1));
+    runrs("main.rs");
+  } else if (argc == 2) {
+    if (*(*(argv + 1)) == '-' && *(*(argv + 1) + 1) == 'h') {
+      fprintf(stdout,
+              "Useage : %s [ options... ]\n"
+              "file.rs               file to run\n"
+              "-h                    print this message\n"
+              "[ no arguments  ]     looks for a main.rs file to run\n",
+              *(argv));
+      exit(0);
+    }
+    runrs(*(argv + 1));
   } else {
-    printf("either main file not found or file passed as argument not found\n");
+    fprintf(stderr,
+            "%s : error, invalid arguments passed\n"
+            "try %s -h for help\n",
+            *(argv), *(argv));
   }
-  exit(0);
 }
