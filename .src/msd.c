@@ -4,8 +4,8 @@
 #include <unistd.h>
 
 //$ msd sda1 /mnt
-char command[100];
-char temp[50]; // input puts into command
+char command[120];
+char temp[100]; // input puts into command
 
 void mountsd(char *str1, char *str2, char *exe_name) {
   sprintf(command, "sudo mount /dev/");
@@ -20,6 +20,7 @@ void mountsd(char *str1, char *str2, char *exe_name) {
             exe_name, exe_name);
     exit(1);
   }
+  strncat(command, temp, 99);
   system(command);
 }
 

@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 /* global variables */
 char command[2048];
+char programName[100];
 char *optarg, *opt_message, *opt_branch, *opt_origin, *opt_add, *opt_repoName,
     *opt_description, *githubCreate, *opt_view;
 struct trip {
@@ -20,6 +22,7 @@ struct trip {
 int getdir(char *place, char *thing);
 /* prints the help message and exits the program with the number exit_v */
 void print_format(FILE *std, int exit_v, char *exe_name);
+void notTogether(char c1, char c2);
 /* copys the string in s2 to command */
 void input(char *s1);
 /* puts the string ss in system to be runned */
@@ -37,9 +40,11 @@ void run(struct trip *T, char *s);
 /* ========= main function  =========== */
 int main(int argc, char *argv[]) {
   if (argc == 1) {
-    fprintf(stderr, "%s : Invalid option passed\n", *argv + 0);
-    print_format(stderr, 1, *argv + 0);
+    fprintf(stderr, "%s : Invalid option passed...\n\ttry -h for hlep",
+            *argv + 0);
+    exit(1);
   }
+
   /* local variables */
   int opt, optind;
   /* initializing the struct to false */
@@ -68,8 +73,7 @@ int main(int argc, char *argv[]) {
     case 'b':
       // create branch
       if (ntrip.switch_) {
-        fprintf(stderr, "%s\n", "ERR: cannot used -d && -s together");
-        exit(1);
+        notTogether('d', 's');
       }
       ntrip.branch = 1;
       opt_branch = optarg;
@@ -77,8 +81,7 @@ int main(int argc, char *argv[]) {
     case 's':
       // switch branch
       if (ntrip.branch) {
-        fprintf(stderr, "%s\n", "ERR: cannot used -d && -s together");
-        exit(1);
+        notTogether('d', 's');
       }
       opt_branch = optarg;
       ntrip.switch_ = 1;
@@ -86,16 +89,14 @@ int main(int argc, char *argv[]) {
     case 'l':
       // pull
       if (ntrip.push) {
-        fprintf(stderr, "%s\n", "ERR: cannot used -l && -p together");
-        exit(1);
+        notTogether('p', 'l');
       }
       ntrip.pull = 1;
       break;
     case 'p':
       // push
       if (ntrip.pull) {
-        fprintf(stderr, "%s\n", "ERR: cannot used -l && -p together");
-        exit(1);
+        notTogether('p', 'l');
       }
       ntrip.push = 1;
       break;
@@ -110,7 +111,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'v':
       // verbose
-      fprintf(stdout, "%s\n", "verbose enabled**");
+      fprintf(stdout, "%s", "verbose enabled**");
       ntrip.verbose = 1;
       break;
     case 'e':
@@ -148,12 +149,13 @@ int main(int argc, char *argv[]) {
       break;
     case ':':
       // errors
-      fprintf(stderr, "option  needs a value\n\tTry -h for help\n");
+      fprintf(stderr, "%s : option used needs a value\n\ttry -h for help\n",
+              *(argv));
       exit(EXIT_FAILURE);
       break;
       // command not found
     default:
-      fprintf(stderr, "%s : Invalid option passed\n\tTry -h for help\n",
+      fprintf(stderr, "%s : Invalid option passed\n\ttry -h for help\n",
               argv[0]);
       exit(EXIT_FAILURE);
     }
@@ -215,9 +217,10 @@ void print_format(FILE *std, int exit_v, char *exe_name) {
       "-v              print out the current running code *\n"
       "-g              show git log files *\n"
       "-t              show git status *\n"
+      "  ==== Online Repo Maniplualtion ====\n"
       "-o 'user/repo'  add an origin *\n"
       "-r 'repo_name'  create an online repo[ the name of your new repo ]\n"
-      "-u 'mode'       needed to create online repo [ private or public "
+      "-u 'mode'       needed to create online repo [ true / false for private"
       "repo ]\n"
       "-y 'des'        needed to create an online repo[ the description ]\n"
       "\nThis is just a simple alias for git\n"
@@ -240,6 +243,11 @@ void print_format(FILE *std, int exit_v, char *exe_name) {
       exe_name, exe_name);
 
   exit(exit_v);
+}
+
+void notTogether(char c1, char c2) {
+  fprintf(stdout, "ERR : cannot use options -%c -%c together\n", c1, c2);
+  exit(1);
 }
 
 void input(char *s1) {
