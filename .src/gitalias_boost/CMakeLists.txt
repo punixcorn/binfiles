@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.25)
+project(gitalias)
+add_executable(${PROJECT_NAME} Main.cxx)
+target_link_libraries(${PROJECT_NAME} boost_program_options)
+set( CMAKE_CXX_STANDARD 14 )
+set( CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR} )
+set( EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR} )
