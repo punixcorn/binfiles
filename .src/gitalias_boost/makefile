@@ -1,7 +1,16 @@
-all:
-	cmake -S . -B build 
-	cmake --build build 
+option=-h
+
+all: build
+
+run: all 
+	./bin/gitalias $(option)
+
+preBuild: Main.cxx clean
+	cmake -S . -B build
+
+build: preBuild
+	cmake --build build
 
 clean:
-	rm -rf build 
+	rm -rf build
 	rm -rf bin
