@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
   Trips *T = new (std::nothrow) Trips;
   if (T == NULL)
   {
-    std::cerr << "Program Crashed...\n";
+    std::cerr << program_invocation_name << ": Program Crashed...\n"
+              << "Err: Trip could not be allocated\n";
     exit(1);
   }
   try
@@ -68,65 +69,41 @@ int main(int argc, char *argv[])
   }
   catch (...)
   {
-    std::cerr << "Program Crashed...\n";
+    std::cerr << program_invocation_name << ": Program Crashed...\n"
+              << "Err : Trip reset<memset()>\n";
     exit(1);
   }
   try
   {
-    /*
-    ---- some info ----
-
-    with notifier() we can call directly to functions
-    add implicit_values() as default values causes Trips if called or not , implicit only when called
-
-    -_-_-_-_-_-_-_-_- what to do ? -_-_-_-_-_-_-_-_-_-
-
-    i think implementation of this should be that one could do multiple things at once?
-    say :
-    ` gitalias -a file1 file2 -c -m "added 2 files" --repo "files" --des "my new files" --mode true --origin "user/files" `
-    this would add some files , then it would commit with the message "added 2 files" then create an online repo called "files" then add it to this offline one..
-    1. loads of strings to generate {
-      could fix this if we used the default generated one? => vm["option"].as<type>()
-    }
-
-    2. parsing , as how they are translated into git language and passed into the terminal ? {
-      could fix this is we just made every `&& git <command> `
-      execpt a few
-      -m -c => as m depends on commit and not the other way round
-      to fix the -m and -c we will make them the first thing checked
-      as they will be parsed first for any checks and errors
-    }
-
-    */
     opt::options_description desc(std::string(*argv).append(" options"));
     desc.add_options()("help,h", "print this message")("init,i", "init a repository")("commit,c", "add all and commit")("add,a", opt::value<std::vector<std::string>>()->multitoken(), "add [files] only")("message,m", opt::value<std::vector<std::string>>()->multitoken(), "add a message")("branch,b", opt::value<std::string>()->implicit_value(""), "create a branch")("switch,s", opt::value<std::string>(), "switch to a branch")("delete,d", opt::value<std::string>(), "delete a branch")("Merge,M", opt::value<std::string>(), "merge branch [ branch-name ] with current branch")("Pull,P", opt::value<std::string>()->implicit_value(""), "pull from origin")("push,p", opt::value<std::string>()->implicit_value(""), "push into origin")("verbose,v", "print out parsed code")("log,l", "show log files")("Status,S", "show statuts")("origin,o", opt::value<std::string>(), "add an origin")("repo,r", opt::value<std::string>(&reponame), "name for creating an online repo * [i]")("Des,D", opt::value<std::string>(&repodes), "description for the online repo * [ii]")("type,t", opt::value<bool>(&mode)->value_name("bool"), "bool : true/false | if repo should be private *[iii]");
 
     opt::variables_map args;
-    opt::store(opt::command_line_parser(argc, argv).options(desc).style(opt::command_line_style::default_style | opt::command_line_style::allow_long_disguise | opt::command_line_style::allow_sticky | opt::command_line_style::allow_guessing).run(), args);
+    opt::store(opt::command_line_parser(argc, argv).options(desc).style(opt::command_line_style::default_style | opt::command_line_style::allow_sticky).run(), args);
     opt::notify(args);
     if (args.count("help"))
-    { /* fixing the stream */
+    {
+      /* fixing the stream  maybe?
+      only needed when theres a command for only shorthands
       std::stringstream stream;
       stream << desc;
       std::string helpMsg = stream.str();
       boost::algorithm::replace_all(helpMsg, "--", "-");
       boost::algorithm::replace_all(helpMsg, "[ -", "[ --");
-      /* maybe not */
       std::cout << helpMsg << "\n";
+      */
+      std::cout << desc << std::endl;
       exit(0);
     }
     /* Check for trips */
     if (args.count("commit"))
     {
-      debugg("c");
       T->commit = true;
     }
 
     if (args.count("message"))
     {
-      debugg("m");
       T->message = true;
-      // messagebox += " -m '";
       for (std::vector<std::string>::const_iterator i = args["message"].as<std::vector<std::string>>().begin(); i != args["message"].as<std::vector<std::string>>().end(); i++)
       {
         messagebox += " -m '";
@@ -137,23 +114,23 @@ int main(int argc, char *argv[])
 
     if (args.count("init"))
     {
-      debugg("i");
       T->init = true;
     }
     if (args.count("add"))
     {
-      debugg("a");
       T->add = true;
       addbox += " && git add ";
+      std::cout << "Files added: ";
       for (std::vector<std::string>::const_iterator i = args["add"].as<std::vector<std::string>>().begin(); i != args["add"].as<std::vector<std::string>>().end(); i++)
       {
+        std::cout << *i << " ";
         addbox += *i;
         addbox += " ";
       }
+      std::cout << std::endl;
     }
     if (args.count("branch"))
     {
-      debugg("b");
       T->branch = true;
       Isubcommand(" && git branch ", "");
       if (args["branch"].as<std::string>().length() > 0)
@@ -163,62 +140,62 @@ int main(int argc, char *argv[])
     }
     if (args.count("switch"))
     {
-      debugg("s");
       T->switch_ = true;
       Isubcommand(" && git switch ", args["switch"].as<std::string>());
     }
     if (args.count("delete"))
     {
-      debugg("d");
       T->deleteBranch = true;
       Isubcommand(" && git branch -d ", args["delete"].as<std::string>());
     }
     if (args.count("Merge"))
     {
-      debugg("e");
       T->merge = true;
       Isubcommand(" && git merge ", args["Merge"].as<std::string>());
     }
     if (args.count("Pull"))
     {
-      debugg("l");
       T->pull = true;
       if (args["Pull"].as<std::string>() == "all")
+      {
+        std::cout << "Pulling all remote branches..\n";
         Isubcommand(" && git push --all ", "");
+      }
       else
+      {
         Isubcommand(" && git pull ", args["Pull"].as<std::string>());
+      }
     }
     if (args.count("push"))
     {
-      debugg("p");
       T->push = true;
       if (args["push"].as<std::string>() == "all")
+      {
+        std::cout << "Pushing all branches...\n";
         Isubcommand(" && git push --all ", "");
+      }
       else
+      {
         Isubcommand(" && git push ", args["push"].as<std::string>());
+      }
     }
     if (args.count("verbose"))
     {
-      debugg("v");
       T->verbose = true;
     }
     if (args.count("log"))
     {
-      debugg("g");
       T->log = true;
       Isubcommand(" && git log ", "");
     }
     if (args.count("Status"))
     {
-      debugg("t");
       T->status = true;
       Isubcommand(" && git status ", "");
     }
     if (args.count("origin"))
     {
-
       char *otemp = new (std::nothrow) char[256];
-      debugg("o");
       T->origin = true;
       sprintf(otemp,
               " && git remote add origin git@github.com:%s && git branch -M "
@@ -228,17 +205,14 @@ int main(int argc, char *argv[])
     }
     if (args.count("repo"))
     {
-      debugg("r");
       T->repoName = true;
     }
     if (args.count("Des"))
     {
-      debugg("y");
       T->repoDes = true;
     }
     if (args.count("type"))
     {
-      debugg("u");
       T->repoMode = true;
     }
   }
@@ -254,7 +228,7 @@ int main(int argc, char *argv[])
 
 auto debugg(std::string e) -> void
 {
-  std::cout << e << " was called \n";
+  std::cout << " Debug : " << e << " was called \n";
 }
 
 auto Isubcommand(std::string s1, std::string s2) -> void
@@ -340,9 +314,9 @@ auto Checkadd() -> bool
     std::string tempcmp;
     tempcmp = temp;
     if (tempcmp == "Changes not staged for commit:\n" || tempcmp == "Changes to be committed:\n")
-      return true;
+      return false;
   };
-  return false;
+  return true;
 }
 
 auto createOnlineReop() -> std::string
