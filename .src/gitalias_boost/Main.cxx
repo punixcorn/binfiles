@@ -313,7 +313,7 @@ auto Checkadd() -> bool
   {
     std::string tempcmp;
     tempcmp = temp;
-    if (tempcmp == "Changes not staged for commit:\n" || tempcmp == "Changes to be committed:\n")
+    if (tempcmp == "Changes not staged for commit:\n" || tempcmp == "Changes to be committed:\n" || "No commits yet\n")
       return false;
   };
   return true;
@@ -363,14 +363,10 @@ auto createOnlineReop() -> std::string
             << repodes << "\n"
                           "\tPrivate: "
             << strMode << "\n"
-                          "continue with creation of the online repository [Y,n] : ";
+                          "continue with creation of the online repository [y,N] : ";
   std::cin >> confirm;
-  if (confirm == 'N' || confirm == 'n')
+  if ((char)tolower(confirm) != 'y')
     return "User has stopped process ";
-  else if (confirm == 'Y' || confirm == 'y')
-    ;
-  else
-    return "Invalid input, option not found ";
 
   check = getdir("/bin", "curl");
   if (!check)
@@ -411,12 +407,14 @@ auto parse(Trips *t) -> void
     {
       std::cout << "Git repository not found\nDo you want to initialize a git repository here?[y,N]: ";
       std::cin >> chrInit;
-      if (tolower(chrInit) == 'y')
-        t->init = true;
-      else if (tolower(chrInit) == 'n')
+      if ((char)tolower(chrInit) != 'y')
+      {
         t->init = false;
+        errorT2("No git repository found, exiting..\n");
+        exit(1);
+      }
       else
-        t->init = false;
+        parseCommand += " && git init ";
     }
   }
   else
