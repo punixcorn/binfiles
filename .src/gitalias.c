@@ -49,8 +49,12 @@ int main(int argc, char *argv[]) {
   int opt, optind;
   /* initializing the struct to false */
   struct trip ntrip = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  const char *short_options = ":hica:m:b:s:lpo:ve:gd:r:u:y:t";
+  const struct option long_options[] = {
+      {"help", 0 /*if it takes an input*/, NULL, 'h'}};
+  int next_option;
 
-  while ((opt = getopt(argc, argv, ":hica:m:b:s:lpo:ve:gd:r:u:y:t")) != -1) {
+  while ((opt = getopt(argc, argv, short_options)) != -1) {
     switch (opt) {
     case 'i':
       // init

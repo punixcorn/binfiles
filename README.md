@@ -14,7 +14,7 @@ clone the folder add the folder to path
 
 ### Errors
 
-most **errors** are from the bashfiles not having the right permissions
+i dunno of any yet
 
 ### Source Files
 
