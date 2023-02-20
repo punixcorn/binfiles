@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     */
     opt::options_description desc(std::string(*argv).append(" options"));
-    desc.add_options()("help,h", "print this message")("init,i", "init a repository")("commit,c", "add all and commit")("add,a", opt::value<std::vector<std::string>>()->multitoken(), "add [files] only")("message,m", opt::value<std::vector<std::string>>()->multitoken(), "add a message")("branch,b", opt::value<std::string>()->implicit_value(""), "create a branch")("switch,s", opt::value<std::string>(), "switch to a branch")("delete,d", opt::value<std::string>(), "delete a branch")("Merge,M", opt::value<std::string>(), "merge branch [ branch-name ] with current branch")("Pull,P", opt::value<std::string>(), "pull from origin")("push,p", opt::value<std::string>(), "push into origin")("verbose,v", "print out parsed code")("log,l", "show log files")("Status,S", "show statuts")("origin,o", opt::value<std::string>(), "add an origin")("repo,r", opt::value<std::string>(&reponame), "name for creating an online repo * [i]")("Des,D", opt::value<std::string>(&repodes), "description for the online repo * [ii]")("type,t", opt::value<bool>(&mode)->value_name("bool"), "bool : true/false | if repo should be private *[iii]");
+    desc.add_options()("help,h", "print this message")("init,i", "init a repository")("commit,c", "add all and commit")("add,a", opt::value<std::vector<std::string>>()->multitoken(), "add [files] only")("message,m", opt::value<std::vector<std::string>>()->multitoken(), "add a message")("branch,b", opt::value<std::string>()->implicit_value(""), "create a branch")("switch,s", opt::value<std::string>(), "switch to a branch")("delete,d", opt::value<std::string>(), "delete a branch")("Merge,M", opt::value<std::string>(), "merge branch [ branch-name ] with current branch")("Pull,P", opt::value<std::string>()->implicit_value(""), "pull from origin")("push,p", opt::value<std::string>()->implicit_value(""), "push into origin")("verbose,v", "print out parsed code")("log,l", "show log files")("Status,S", "show statuts")("origin,o", opt::value<std::string>(), "add an origin")("repo,r", opt::value<std::string>(&reponame), "name for creating an online repo * [i]")("Des,D", opt::value<std::string>(&repodes), "description for the online repo * [ii]")("type,t", opt::value<bool>(&mode)->value_name("bool"), "bool : true/false | if repo should be private *[iii]");
 
     opt::variables_map args;
     opt::store(opt::command_line_parser(argc, argv).options(desc).style(opt::command_line_style::default_style | opt::command_line_style::allow_long_disguise | opt::command_line_style::allow_sticky | opt::command_line_style::allow_guessing).run(), args);
@@ -183,13 +183,19 @@ int main(int argc, char *argv[])
     {
       debugg("l");
       T->pull = true;
-      Isubcommand(" && git pull ", "");
+      if (args["Pull"].as<std::string>() == "all")
+        Isubcommand(" && git push --all ", "");
+      else
+        Isubcommand(" && git pull ", args["Pull"].as<std::string>());
     }
     if (args.count("push"))
     {
       debugg("p");
       T->push = true;
-      Isubcommand(" && git push ", "");
+      if (args["push"].as<std::string>() == "all")
+        Isubcommand(" && git push --all ", "");
+      else
+        Isubcommand(" && git push ", args["push"].as<std::string>());
     }
     if (args.count("verbose"))
     {
