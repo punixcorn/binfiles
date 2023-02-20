@@ -390,7 +390,6 @@ auto parse(Trips *t) -> void
   std::string parseCommand;
   /* checks for a initialized repository */
   bool isInit = getGitInfo();
-  std::cout << isInit;
   char chrInit;
   if (isInit == 0)
   {
