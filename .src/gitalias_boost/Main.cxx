@@ -26,23 +26,25 @@ struct Trips
 };
 
 /* ============== function declarations ================*/
-/* for debug purposes, prints the string e */
+/* for debug purposes, prints the string e [ ret: void ] */
 auto debugg(std::string e) -> void;
-/*append into subcommand*/
+/* append into subcommand [ ret: void ]*/
 void Isubcommand(std::string s1, std::string s2);
-/* prints error message e and kills the program */
+/* prints error message e and kills the program [ ret: void ]*/
 auto errorT1(std::string e) -> void;
-/* prints error message e and kills the program */
+/* prints error message e and kills the program  [ ret: void ]*/
 auto errorT2(std::string e) -> void;
-/* checks if you have a git repo init */
-auto getGitInfo() -> bool;
-/* check is something exists at place */
+/* check is something exists at place [ ret: void ]*/
 auto getdir(std::string place, std::string thing) -> bool;
-/* create an online repository */
+/* checks if you have a git repo init [ ret: bool ]*/
+auto getGitInfo() -> bool;
+/* check for staged files [ ret: bool ]*/
+auto Checkadd() -> bool;
+/* create an online repository [ ret: std::string ]*/
 auto createOnlineReop(bool check) -> std::string;
-/* runs the command */
+/* runs the command [ ret: void ]*/
 auto run(bool v) -> void;
-/* parses the struct  */
+/* parses the struct [ ret: void ] */
 auto parse(Trips *t) -> void;
 
 /* ============== Main ============*/
@@ -97,7 +99,7 @@ int main(int argc, char *argv[])
 
     */
     opt::options_description desc(std::string(*argv).append(" options"));
-    desc.add_options()("help,h", "print this message")("init,i", "init a repository")("commit,c", "add all and commit")("add,a", opt::value<std::vector<std::string>>()->multitoken(), "add [files] only")("message,m", opt::value<std::vector<std::string>>()->multitoken(), "add a message")("branch,b", opt::value<std::string>()->implicit_value(""), "create a branch")("switch,s", opt::value<std::string>(), "switch to a branch")("delete,d", opt::value<std::string>(), "delete a branch")("Merge,M", opt::value<std::string>(), "merge branch [ branch-name ] with current branch")("Pull,P", opt::value<std::string>(), "pull from origin")("push,p", opt::value<std::string>(), "push into origin")("verbose,v", "print out parsed code")("log,g", "show log files")("Status,S", "show statuts")("origin,o", opt::value<std::string>(), "add an origin")("repo,r", opt::value<std::string>(&reponame), "name for creating an online repo * [i]")("Des,D", opt::value<std::string>(&repodes), "description for the online repo * [ii]")("type,t", opt::value<bool>(&mode)->value_name("bool"), "bool : true/false | if repo should be private *[iii]");
+    desc.add_options()("help,h", "print this message")("init,i", "init a repository")("commit,c", "add all and commit")("add,a", opt::value<std::vector<std::string>>()->multitoken(), "add [files] only")("message,m", opt::value<std::vector<std::string>>()->multitoken(), "add a message")("branch,b", opt::value<std::string>()->implicit_value(""), "create a branch")("switch,s", opt::value<std::string>(), "switch to a branch")("delete,d", opt::value<std::string>(), "delete a branch")("Merge,M", opt::value<std::string>(), "merge branch [ branch-name ] with current branch")("Pull,P", opt::value<std::string>(), "pull from origin")("push,p", opt::value<std::string>(), "push into origin")("verbose,v", "print out parsed code")("log,l", "show log files")("Status,S", "show statuts")("origin,o", opt::value<std::string>(), "add an origin")("repo,r", opt::value<std::string>(&reponame), "name for creating an online repo * [i]")("Des,D", opt::value<std::string>(&repodes), "description for the online repo * [ii]")("type,t", opt::value<bool>(&mode)->value_name("bool"), "bool : true/false | if repo should be private *[iii]");
 
     opt::variables_map args;
     opt::store(opt::command_line_parser(argc, argv).options(desc).style(opt::command_line_style::default_style | opt::command_line_style::allow_long_disguise | opt::command_line_style::allow_sticky | opt::command_line_style::allow_guessing).run(), args);
@@ -124,10 +126,12 @@ int main(int argc, char *argv[])
     {
       debugg("m");
       T->message = true;
+      // messagebox += " -m '";
       for (std::vector<std::string>::const_iterator i = args["message"].as<std::vector<std::string>>().begin(); i != args["message"].as<std::vector<std::string>>().end(); i++)
       {
+        messagebox += " -m '";
         messagebox += *i;
-        messagebox += "-m ";
+        messagebox += "' ";
       }
     }
 
@@ -175,7 +179,7 @@ int main(int argc, char *argv[])
       T->merge = true;
       Isubcommand(" && git merge ", args["Merge"].as<std::string>());
     }
-    if (args.count("pull"))
+    if (args.count("Pull"))
     {
       debugg("l");
       T->pull = true;
@@ -198,7 +202,7 @@ int main(int argc, char *argv[])
       T->log = true;
       Isubcommand(" && git log ", "");
     }
-    if (args.count("status"))
+    if (args.count("Status"))
     {
       debugg("t");
       T->status = true;
@@ -221,12 +225,12 @@ int main(int argc, char *argv[])
       debugg("r");
       T->repoName = true;
     }
-    if (args.count("des"))
+    if (args.count("Des"))
     {
       debugg("y");
       T->repoDes = true;
     }
-    if (args.count("mode"))
+    if (args.count("type"))
     {
       debugg("u");
       T->repoMode = true;
@@ -237,11 +241,9 @@ int main(int argc, char *argv[])
     std::cerr << program_invocation_name << ": " << ex.what() << "\n";
     exit(1);
   }
-
   parse(T);
   exit(0);
 }
-
 /*===== End of Main =======*/
 
 auto debugg(std::string e) -> void
@@ -263,6 +265,7 @@ auto errorT2(std::string e) -> void
   std::cerr << program_invocation_name << ": " << e;
   exit(1);
 }
+
 auto errorT1(std::string e) -> void
 {
   std::cerr << program_invocation_name << ": " << e << "\n try \" " << program_invocation_name << " --help \" for more information " << std::endl;
@@ -292,22 +295,48 @@ auto getdir(std::string place, std::string thing) -> bool
 auto getGitInfo() -> bool
 {
   FILE *fd;
-  size_t len = 0, read;
   char *temp = new (std::nothrow) char[1024];
   std::string newTemp;
+  bool tempTrip{false};
   /* apparently fopen will bug out if there is and error hence 2>&1 is needed */
   fd = popen("git status 2>&1 ", "r");
   if (fd == NULL || temp == NULL)
+    errorT2("Program Crashed...\n");
+  /* compares the whole string and if it fails to find the string , it will exit and set tempTrip to true hence a second check will be made */
+  while (fgets(temp, 1024, fd))
   {
-    std::cerr << "Program Crashed...\n";
-    exit(1);
+    std::string tempcmp;
+    tempcmp = temp;
+    if (tempcmp == "fatal: not a git repository (or any of the parent directories): .git\n")
+      return tempTrip;
   }
-  fscanf(fd, " %1023s", temp);
-  newTemp = temp;
+  tempTrip = true;
+  /* second check lol */
+  if (tempTrip)
+  {
+    fscanf(fd, " %1023s", temp);
+    newTemp = temp;
+    if (newTemp == "fatal:")
+      return !tempTrip;
+  }
+  return tempTrip;
+}
 
-  if (newTemp == "fatal:")
-    return 0;
-  return 1;
+auto Checkadd() -> bool
+{
+  FILE *fd;
+  char *temp = new (std::nothrow) char[1024];
+  fd = popen("git status", "r");
+  if (fd == NULL || temp == NULL)
+    errorT2("Program Crahsed...\n");
+  while (fgets(temp, 1023, fd))
+  {
+    std::string tempcmp;
+    tempcmp = temp;
+    if (tempcmp == "Changes not staged for commit:\n" || tempcmp == "Changes to be committed:\n")
+      return true;
+  };
+  return false;
 }
 
 auto createOnlineReop() -> std::string
@@ -378,9 +407,10 @@ auto createOnlineReop() -> std::string
 
 auto run(bool v) -> void
 {
-  command += subcommand;
+  if (subcommand.length() > 0)
+    command += subcommand;
   if (v)
-    std::cout << command << std::endl;
+    std::cout << "Command generated: " << command << std::endl;
   std::system(command.c_str());
   exit(0);
 }
@@ -393,14 +423,21 @@ auto parse(Trips *t) -> void
   char chrInit;
   if (isInit == 0)
   {
-    std::cout << "Git repository not found\nDo you want to initialize a git repository here?[y,N]: ";
-    std::cin >> chrInit;
-    if (chrInit == 'Y' || chrInit == 'y')
-      t->init = true;
-    else if (chrInit == 'N' || chrInit == 'n')
-      t->init = false;
+    if (t->init)
+    {
+      parseCommand += " && git init ";
+    }
     else
-      t->init = false;
+    {
+      std::cout << "Git repository not found\nDo you want to initialize a git repository here?[y,N]: ";
+      std::cin >> chrInit;
+      if (tolower(chrInit) == 'y')
+        t->init = true;
+      else if (tolower(chrInit) == 'n')
+        t->init = false;
+      else
+        t->init = false;
+    }
   }
   else
   {
@@ -421,30 +458,53 @@ auto parse(Trips *t) -> void
       subcommand += repoStr;
   }
 
-  /* ----- end of single checks ------ */
-
-  /* init trip */
+  /* init trip
   if (t->init)
   {
     parseCommand += " && git init ";
   }
-  /* if not message trip  */
-  if (!t->message)
-  {
-    messagebox = "commit made";
-  }
-  /* if not add trip */
-  if (!t->add)
-  {
-    addbox += "&& git add . ";
-  }
-
-  /* commit trip  occured */
+  */
+  /*if a commit trip is made all these rules apply */
   if (t->commit)
-    parseCommand += " && git commit ";
+  {
+    /* if not message trip  */
+    if (!t->message)
+    {
+      messagebox = " -m 'commit made' ";
+    }
+    /* if not add trip */
+    if (!t->add)
+    {
+      /* before we do any add, we first check if there are things to be commited */
+      /*
+      On branch main
+      << nothing to commit, working tree clean >> intrested in this
+      if there was initailly nothing
+      << otherwise >>
+      On branch main
+      Changes to be committed: >> intrested in this
+      (use "git restore --staged <file>..." to unstage)
+        new file:   file1
+        new file:   file2
+      */
+      if (!Checkadd())
+        addbox += "&& git add . ";
+    }
 
-  parseCommand += addbox;
-  parseCommand += messagebox;
+    /* commit trip  occured */
+    parseCommand += addbox;
+    parseCommand += " && git commit ";
+    parseCommand += messagebox;
+  }
+  else
+  {
+    if (t->message)
+      errorT2("Cannot use option --message without a commit\n");
+    if (t->add)
+      parseCommand += addbox;
+  }
+  if (parseCommand.length() > 0)
+    command += parseCommand;
 
   run(t->verbose);
 }

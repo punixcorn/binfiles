@@ -1,11 +1,20 @@
 option=-h
+DIR=
 
 all: build
 
-run: all 
+allClean: preBuildClean
+
+# to make a copy somewhere for testing
+copy: all
+	cp ./bin/gitalias $(DIR)
+
+run: all
 	./bin/gitalias $(option)
 
-preBuild: Main.cxx clean
+preBuildClean: Main.cxx clean preBuild build
+
+preBuild: Main.cxx
 	cmake -S . -B build
 
 build: preBuild
