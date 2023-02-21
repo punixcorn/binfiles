@@ -2,10 +2,13 @@
 /* Gitalias re-writeen in cpp for long options as get_optlong did not meet requirements*/
 /* C++ includes */
 #include <boost/program_options.hpp>
+#include <cstddef>
+#include <ios>
 #include <iostream>
 #include <fstream>
 #include <cstdlib> /* c++ remake of stdlib*/
 #include <cstdio>  /* c++ remake of stdio*/
+#include <new>
 #include <string>
 #include <vector>
 #include <boost/program_options/errors.hpp>
@@ -26,8 +29,6 @@ struct Trips
 };
 
 /* ============== function declarations ================*/
-/* for debug purposes, prints the string e [ ret: void ] */
-auto debugg(std::string e) -> void;
 /* append into subcommand [ ret: void ]*/
 void Isubcommand(std::string s1, std::string s2);
 /* prints error message e and kills the program [ ret: void ]*/
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
   }
   try
   {
-    memset(T, 0, sizeof(T));
+    memset(T, 0, sizeof(Trips));
   }
   catch (...)
   {
@@ -195,9 +196,10 @@ int main(int argc, char *argv[])
     }
     if (args.count("origin"))
     {
-      char *otemp = new (std::nothrow) char[256];
+      size_t buffersize = 256;
+      char *otemp = new (std::nothrow) char[buffersize];
       T->origin = true;
-      sprintf(otemp,
+      snprintf(otemp,buffersize,
               " && git remote add origin git@github.com:%s && git branch -M "
               "main && git push -u origin main",
               args["origin"].as<std::string>().c_str());
@@ -221,22 +223,20 @@ int main(int argc, char *argv[])
     std::cerr << program_invocation_name << ": " << ex.what() << "\n";
     exit(1);
   }
+  try{
   parse(T);
+  }catch(...){
+    std::cout << program_invocation_name <<": Parsing options failed..." << std::endl;
+    exit(2);
+  }
   exit(0);
 }
 /*===== End of Main =======*/
 
-auto debugg(std::string e) -> void
-{
-  std::cout << " Debug : " << e << " was called \n";
-}
-
 auto Isubcommand(std::string s1, std::string s2) -> void
 {
   subcommand += s1;
-  if (s2.length() <= 0)
-    ;
-  else
+  if (s2.length() != 0)
     subcommand += s2;
 }
 
@@ -275,45 +275,42 @@ auto getdir(std::string place, std::string thing) -> bool
 auto getGitInfo() -> bool
 {
   FILE *fd;
-  char *temp = new (std::nothrow) char[1024];
+  int buffersize = 1024;
   std::string newTemp;
-  bool tempTrip{false};
+  char *temp = new (std::nothrow) char[buffersize];
+  bool tempTrip{true};
   /* apparently fopen will bug out if there is and error hence 2>&1 is needed */
   fd = popen("git status 2>&1 ", "r");
   if (fd == NULL || temp == NULL)
     errorT2("Program Crashed...\n");
   /* compares the whole string and if it fails to find the string , it will exit and set tempTrip to true hence a second check will be made */
-  while (fgets(temp, 1024, fd))
+  while (fgets(temp, buffersize, fd))
   {
-    std::string tempcmp;
-    tempcmp = temp;
-    if (tempcmp == "fatal: not a git repository (or any of the parent directories): .git\n")
-      return tempTrip;
+    newTemp = temp;
+    if ( newTemp == "fatal: not a git repository (or any of the parent directories): .git\n"){
+      return !tempTrip;
+    }
   }
-  tempTrip = true;
   /* second check lol */
-  if (tempTrip)
-  {
-    fscanf(fd, " %1023s", temp);
+    fscanf(fd, " %1024s", temp);
     newTemp = temp;
     if (newTemp == "fatal:")
       return !tempTrip;
-  }
   return tempTrip;
 }
-
+/* this still has issues */
 auto Checkadd() -> bool
 {
   FILE *fd;
   char *temp = new (std::nothrow) char[1024];
-  fd = popen("git status", "r");
+  fd = popen("git status 2>&1", "r");
   if (fd == NULL || temp == NULL)
     errorT2("Program Crahsed...\n");
   while (fgets(temp, 1023, fd))
   {
     std::string tempcmp;
     tempcmp = temp;
-    if (tempcmp == "Changes not staged for commit:\n" || tempcmp == "Changes to be committed:\n" || "No commits yet\n")
+    if (tempcmp == "Changes not staged for commit:\n" || tempcmp == "Changes to be committed:\n" || tempcmp ==  "No commits yet\n")
       return false;
   };
   return true;
@@ -327,7 +324,6 @@ auto createOnlineReop() -> std::string
   if (crepo == NULL)
     errorT2("Program Crashed...\n");
   char confirm;
-
   /*checking if the file to read the github token from is alive */
   int check = getdir("/usr", "githubToken");
   if (!check)
@@ -465,7 +461,7 @@ auto parse(Trips *t) -> void
         new file:   file1
         new file:   file2
       */
-      if (!Checkadd())
+      if (Checkadd())
         addbox += "&& git add . ";
     }
 
