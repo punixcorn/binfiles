@@ -6,6 +6,7 @@
 #include <fstream>
 #include <cstdlib> /* c++ remake of stdlib*/
 #include <cstdio>  /* c++ remake of stdio*/
+#include <new>
 #include <string>
 #include <vector>
 #include <boost/program_options/errors.hpp>
@@ -327,7 +328,6 @@ auto createOnlineReop() -> std::string
   if (crepo == NULL)
     errorT2("Program Crashed...\n");
   char confirm;
-
   /*checking if the file to read the github token from is alive */
   int check = getdir("/usr", "githubToken");
   if (!check)
