@@ -1,16 +1,21 @@
 ## Binaries
 
-these are binaries i wrote in C and bash and complied and put them in a folder exported to path so i can call from anywhere, lil shortcuts
+Just a bunch of scripts
 
-###### as of now not all are written in C ( mostly )
+## Install
 
-all the C code does is parse the text you pass into into it and translates and arranges them accordingly
+added an installer that will **add the folder to path and source some files** <br/>
+would work if this is cloned in your home folder and you use `zsh` or `bash` <br/>
 
-and calls the **system()** function to run it , so think of it like an alias
+```bash
+cd ~
+git clone https://github.com/potato-c137/binfiles
+cd ~/binfiles
+sudo chmod a+x *
+./install.sh
+```
 
-### Install
-
-clone the folder add the folder to path
+or mannually just add the folder to path and source all files in `./.completions`
 
 ### Errors
 
@@ -18,4 +23,5 @@ i dunno of any yet
 
 ### Source Files
 
-the **source codes** are located in .src
+the **source codes** are located in `.src`
+`./.completions` holds **bash completions** for binaries
