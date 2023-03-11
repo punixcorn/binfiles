@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
               "Usage : %s [ options... ]\n"
               "[  <device> <directory> ]   mount a device on directory \n"
               "-h                          print this message \n"
-              "Example:\n\t%s sda1 \/mnt\n",
+              "Example:\n\t%s sda1 /mnt\n",
               *(argv), *(argv));
       exit(0);
     }
