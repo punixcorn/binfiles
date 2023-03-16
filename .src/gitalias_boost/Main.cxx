@@ -41,7 +41,8 @@ struct Trips {
 /* ============== function declarations ================*/
 /* append into subcommand [ ret: void ]*/
 void Isubcommand(std::string s1, std::string s2);
-/* prints error message e and kills the program [ ret: void ]*/
+/* prints error message e with help message and kills the program [ ret: void
+ * ]*/
 auto errorT1(std::string e) -> void;
 /* prints error message e and kills the program  [ ret: void ]*/
 auto errorT2(std::string e) -> void;
@@ -52,7 +53,7 @@ auto getGitInfo() -> bool;
 /* check for staged files [ ret: bool ]*/
 auto Checkadd() -> bool;
 /* create an online repository [ ret: std::string ]*/
-auto createOnlineReop(bool check) -> std::string;
+auto createOnlineRepo() -> void;
 /* runs the command [ ret: void ]*/
 auto run(bool v) -> void;
 /* parses the struct [ ret: void ] */
@@ -109,13 +110,15 @@ int main(int argc, char *argv[]) {
         "type,t", opt::value<bool>(&mode)->value_name("bool"),
         "if repo should be private *[iii]")(
         "undo,u", opt::value<std::vector<std::string>>()->multitoken(),
-        "*Reset back to a commit: 2 total args "
-        "1 arg required = [number] of commits to reset back"
-        "2 arg : type of reset ( hard / soft / mixed )")(
+        "*Reset back to a commit , "
+        "1st arg : type of reset ( hard / soft / mixed ) , "
+        "2nd arg : number of commits to reset back")(
         "git,g", opt::value<std::vector<std::string>>()->multitoken(),
-        "run normal git command =[  git <arg> ] if you add more commands "
-        "append git to it [ ga -G \"add .\" \" git commit -m \"foo\" \" ... "
-        "]");
+        "run git command =[  git <arg> ] if you add more commands "
+        "append git to it eg:  ga -G \"add .\" \" git commit -m \"foo\" \" ... "
+        "]")("Grab,G", opt::value<std::string>(),
+             "grab a specific folder from a github repo");
+
     opt::variables_map args;
     opt::store(opt::command_line_parser(argc, argv)
                    .options(desc)
@@ -262,6 +265,8 @@ int main(int argc, char *argv[]) {
           Sreset_temp += "--soft HEAD~";
         } else if (s == "hard" || s == "h") {
           Sreset_temp += "--hard HEAD~";
+        } else if (s == "mixed" || s == "m") {
+          Sreset_temp += "--mixed HEAD~";
         } else if (atoi(s.c_str()) != 0) {
           if (Sreset_temp.length() > 0)
             Sreset_temp += s;
@@ -283,6 +288,20 @@ int main(int argc, char *argv[]) {
       }
       Isubcommand(Git_temp, "");
     }
+    if (args.count("Grab")) {
+
+      std::string grabstr("svn export ");
+      grabstr.append(args["Grab"].as<std::string>());
+      int initLenght = grabstr.length();
+      // first checks for "tree/main"
+      boost::algorithm::replace_all(grabstr, "tree/main", "trunk");
+      // if not found, then your most likely exporting a branch
+      boost::algorithm::replace_all(grabstr, "tree", "branches");
+      if (grabstr.length() == initLenght)
+        errorT2("could not resolve github link used\n");
+      Isubcommand(" && ", grabstr);
+    }
+
   } catch (const opt::error &ex) {
     std::cerr << program_invocation_name << ": " << ex.what() << "\n";
     exit(1);
@@ -388,7 +407,7 @@ auto Checkadd() -> bool {
   return true;
 }
 
-auto createOnlineReop() -> std::string {
+auto createOnlineRepo() -> void {
   /* variables we need */
   std::string token, strMode;
   char *crepo = new (std::nothrow) char[500];
@@ -440,27 +459,35 @@ auto createOnlineReop() -> std::string {
          "continue with creation of the online repository [y,N] : ";
   std::cin >> confirm;
   if ((char)tolower(confirm) != 'y')
-    return "User has stopped process ";
-
+    errorT2("User has stopped the process\n");
   check = getdir("/bin", "curl");
   if (!check)
     errorT2("curl not found\nProgram curl is needed for this "
             "operation\nDownload curl to use this feature\n");
   snprintf(crepo, 500,
-           " && curl -X POST -H \"Authorization: Bearer %s\""
+           "curl -X POST -H \"Authorization: Bearer %s\""
            " https://api.github.com/user/repos -d "
            "'{\"name\":\"%s\",\"description\":\"%s\",\"homepage\":\"https:"
            "//github.com\",\"private\":%s}'",
            token.c_str(), reponame.c_str(), repodes.c_str(), strMode.c_str());
-
-  return crepo;
+  /* running it here instead of passing it to run */
+  FILE *instance = popen(crepo, "r");
+  char buffer[100];
+  while (std::fgets(buffer, 100, instance) != NULL) {
+    if (strstr(buffer, "Bad credentials") != NULL) {
+      errorT2(
+          "Bad credentials : Please update your token, it may have expired\n");
+    }
+  }
+  std::cout << program_invocation_name << ": " << reponame
+            << " repository created succesfully\n";
 }
 
 auto run(bool v) -> void {
   if (subcommand.length() > 0)
     command += subcommand;
   if (v) {
-    std::cout << "Gitalias VERSION 2.2.0\nCommand generated: " << command
+    std::cout << "Gitalias VERSION 2.2.1\nCommand generated: " << command
               << std::endl;
   }
   std::system(command.c_str());
@@ -498,14 +525,10 @@ auto parse(Trips *t) -> void {
     }
   }
   /* === User repo creation ===*/
+
   if (t->repoMode && t->repoName && t->repoDes) {
     std::string repoStr;
-    repoStr = createOnlineReop();
-    std::string::const_iterator i = repoStr.begin();
-    if (*(i) == 'U')
-      errorT2(repoStr);
-    else
-      subcommand += repoStr;
+    createOnlineRepo();
   } else if (t->repoMode || t->repoDes || t->repoName) {
     std::cerr << program_invocation_name
               << ": User cannot create online repository, not enough "
