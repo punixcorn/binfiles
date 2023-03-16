@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
       info("Invalid arguments passed", -1);
   }
   sprintf(command, "mv ");
+
   while (i < argc) {
     if (strcmp(*(argv + i), "--mkdir") == 0) {
       check = 1;
@@ -86,6 +87,7 @@ int main(int argc, char **argv) {
       strcat(command, *(argv + i));
     i++;
   }
+
   // checking
   char *temp;
   if ((temp = strstr(command, "--mkdir")) != NULL)
