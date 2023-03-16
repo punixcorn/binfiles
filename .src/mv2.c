@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
       strcat(command, *(argv + i));
     i++;
   }
-
+  
   // checking
   char *temp;
   if ((temp = strstr(command, "--mkdir")) != NULL)
