@@ -7,7 +7,7 @@
 #COMPREPLY = a var used to store completions 
 
 _gitalias_completions(){
-    COMPREPLY+=($(compgen -W " --help -h --message -m --commit -c --add -a --init -i --branch -b  -s --switch -d --delete -M --Merge --Pull -P --push -p --Clone -C --Request -R --verbose -v --log -l --Status -S --origin -o --repo -r --Des -D --type -t " "${COMP_WORDS[1]}" 2>/dev/null))
+    COMPREPLY+=($(compgen -W " --help -h --message -m --commit -c --add -a --init -i --branch -b  -s --switch -d --delete -M --Merge --Pull -P --push -p --Clone -C --Request -R --verbose -v --log -l --Status -S --origin -o --repo -r --Des -D --type -t --undo -u --git -g" "${COMP_WORDS[1]}" 2>/dev/null))
 
 }
 

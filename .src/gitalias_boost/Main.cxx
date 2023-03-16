@@ -1,29 +1,33 @@
-/* Copyright 2023 potato@c137 */
-/* Gitalias re-writeen in cpp for long options as get_optlong did not meet
- * requirements*/
-/* C++ includes */
-#include <array>
+/* Copyright 2023 punicorn
+ *
+ * Gitalias re-writeen in cpp for long options as get_optlong did not meet
+ * requirements
+ */
+
+/* boost includes */
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 #include <boost/program_options/value_semantic.hpp>
-#include <cstddef>
-#include <cstdio>  /* c++ remake of stdio*/
-#include <cstdlib> /* c++ remake of stdlib*/
+/* C++ includes */
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <new>
 #include <string>
 #include <vector>
 /*C includes*/
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
 
 namespace opt = boost::program_options;
 
-/*=============== global varibales -> helps prevents extreme function arguments
- * ================= */
+/*global varibales -> helps prevents extreme function arguments*/
 std::string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
     command = "[[ -f /bin/git || -f /usr/bin/git ]] ";
 bool mode; // for the user request;
@@ -103,25 +107,15 @@ int main(int argc, char *argv[]) {
         "Des,D", opt::value<std::string>(&repodes),
         "description for the online repo * [ii]")(
         "type,t", opt::value<bool>(&mode)->value_name("bool"),
-        "if repo should be private *[iii]");
-    /*(
-     "Reset,R", opt::value<std::vector<std::string>>(&Sreset)->multitoken(),
-     "[ NOT STABLE DONT USE ]Reset back to a commit => 2 total args "
-     "<optional> , 1 arg required = "
-     "number of "
-     "commits back  [first-arg= type of reset ( hard / soft "
-     "/ mixed ) second-arg = number of commits back (number)]")(
-     "git,g", opt::value<std::vector<std::string>>()->multitoken(),
-     "run normal git command =[  git <arg> ] if you add more commands "
-     "append git to it [ ga -G \"add .\" \" git commit -m \"foo\" \" ... "
-     "]");*/
-    /* Reset giving errors, will work on it later
-     * can used head or hash
-     * soft reset =  commit
-     * mixed reset = remove added files and commit
-     * hard reset = remove addded file and commit and undo the saves in your
-     * files
-     * */
+        "if repo should be private *[iii]")(
+        "undo,u", opt::value<std::vector<std::string>>()->multitoken(),
+        "*Reset back to a commit: 2 total args "
+        "1 arg required = [number] of commits to reset back"
+        "2 arg : type of reset ( hard / soft / mixed )")(
+        "git,g", opt::value<std::vector<std::string>>()->multitoken(),
+        "run normal git command =[  git <arg> ] if you add more commands "
+        "append git to it [ ga -G \"add .\" \" git commit -m \"foo\" \" ... "
+        "]");
     opt::variables_map args;
     opt::store(opt::command_line_parser(argc, argv)
                    .options(desc)
@@ -260,39 +254,35 @@ int main(int argc, char *argv[]) {
       T->repoMode = true;
     }
 
-    /*if (args.count("Reset")) {
-       T->Rreset = true;
-       std::string Sreset_temp;
-       int testInt = 0;
-       for (auto s : args["Reset"].as<std::vector<std::string>>()) {
-         if (s == "soft" || s == "s") {
-           Sreset_temp += "--soft HEAD~";
-         }
-         if (s == "hard" || s == "h") {
-           Sreset_temp += "--hard HEAD~";
-         } else {
-           if ((testInt = atoi(s.c_str())) == 0) {
-             errorT2("Reset : invalid argumentes\nNeeded : mode(string) number "
-                     "of commits back(number)\n");
-           }
-         }
-       }
-       if (Sreset_temp.empty() || testInt == 0) {
-         errorT2("Reset : invalid argumentes\nNeeded : mode(string) number "
-                 "of commits back(number)\n");
-       }
-       Resetcommand += " && git reset ";
-       Resetcommand += Sreset_temp;
-       Resetcommand += testInt;
-     }
-     if (args.count("git")) {
-       std::string Git_temp = " && git ";
-       for (auto s : args["git"].as<std::vector<std::string>>()) {
-         Git_temp += s;
-       }
-       Isubcommand(Git_temp, "");
-     }
-     */
+    if (args.count("undo")) {
+      T->Rreset = true;
+      std::string Sreset_temp;
+      for (auto s : args["undo"].as<std::vector<std::string>>()) {
+        if (s == "soft" || s == "s") {
+          Sreset_temp += "--soft HEAD~";
+        } else if (s == "hard" || s == "h") {
+          Sreset_temp += "--hard HEAD~";
+        } else if (atoi(s.c_str()) != 0) {
+          if (Sreset_temp.length() > 0)
+            Sreset_temp += s;
+        }
+      }
+      if (Sreset_temp.length() <= 0)
+        errorT2("Invalid parameters passed to --undo options are [ type of "
+                "reset (hard/soft) ] [ number of commits back ] \n");
+
+      Resetcommand += " && git reset ";
+      Resetcommand += Sreset_temp;
+      Isubcommand(Resetcommand, "");
+    }
+    if (args.count("git")) {
+      std::string Git_temp;
+      for (auto s : args["git"].as<std::vector<std::string>>()) {
+        Git_temp += " && git ";
+        Git_temp += s;
+      }
+      Isubcommand(Git_temp, "");
+    }
   } catch (const opt::error &ex) {
     std::cerr << program_invocation_name << ": " << ex.what() << "\n";
     exit(1);
@@ -302,7 +292,7 @@ int main(int argc, char *argv[]) {
   } catch (...) {
     std::cout << program_invocation_name << ": Parsing options failed..."
               << std::endl;
-    exit(2);
+    exit(1);
   }
   exit(0);
 }
@@ -348,12 +338,13 @@ auto getGitInfo() -> bool {
   std::string newTemp;
   char *temp = new (std::nothrow) char[buffersize];
   bool tempTrip{true};
-  /* apparently fopen will bug out if there is and error hence 2>&1 is needed */
+  /* apparently fopen will bug out if there is and error hence 2>&1 is
+   * needed */
   fd = popen("git status 2>&1 ", "r");
   if (fd == NULL || temp == NULL)
     errorT2("Program Crashed...\n");
-  /* compares the whole string and if it fails to find the string , it will exit
-   * and set tempTrip to true hence a second check will be made */
+  /* compares the whole string and if it fails to find the string , it will
+   * exit and set tempTrip to true hence a second check will be made */
   while (fgets(temp, buffersize, fd)) {
     newTemp = temp;
     if (newTemp == "fatal: not a git repository (or any of the parent "
@@ -388,7 +379,8 @@ auto Checkadd() -> bool {
         tempcmp == "nothing added to commit but untracked files present (use "
                    "\"git add\" to track)\n" ||
         tempcmp == "Changes to be committed\n") {
-      /*if string match is found we return false cus we are checking for no add
+      /*if string match is found we return false cus we are checking for no
+       * add
        */
       return false;
     }
@@ -416,9 +408,9 @@ auto createOnlineReop() -> std::string {
   std::ifstream tokenfile;
   tokenfile.open("/usr/githubToken");
   if (!tokenfile) {
-    errorT2(
-        "Could not read Github token\nit is read from /usr/githubToken\nplease "
-        "create the file and put only the token in...\n");
+    errorT2("Could not read Github token\nit is read from "
+            "/usr/githubToken\nplease "
+            "create the file and put only the token in...\n");
   }
   tokenfile >> token;
   tokenfile.close();
@@ -467,9 +459,10 @@ auto createOnlineReop() -> std::string {
 auto run(bool v) -> void {
   if (subcommand.length() > 0)
     command += subcommand;
-  if (v)
-    std::cout << "Gitalias VERSION 2.1.1\nCommand generated: " << command
+  if (v) {
+    std::cout << "Gitalias VERSION 2.2.0\nCommand generated: " << command
               << std::endl;
+  }
   std::system(command.c_str());
   exit(0);
 }
@@ -477,18 +470,6 @@ auto run(bool v) -> void {
 auto parse(Trips *t) -> void {
   std::string parseCommand;
   bool isInit = getGitInfo();
-  /* first you cannot do some stupid stuff*/
-  /*if (t->Rreset && !isInit) {
-    errorT2("No local git repo found\n");
-  } else {
-    if (t->verbose) {
-      std::cout << "Gitalias VERSION 2.1.1\nCommand: " << Resetcommand;
-    }
-    system(Resetcommand.c_str());
-    exit(0);
-  }
-*/
-  /* checks for a initialized repository */
   /* only when its needed any not for everything */
   /* might remove this in the future */
   if ((t->commit || t->add || t->branch || t->deleteBranch || t->init ||
@@ -526,15 +507,18 @@ auto parse(Trips *t) -> void {
     else
       subcommand += repoStr;
   } else if (t->repoMode || t->repoDes || t->repoName) {
-    std::cerr
-        << program_invocation_name
-        << ": User cannot create online repository, not enough information\n"
-        << "Must fill fields --repo <string> , --Des <string> and --type "
-           "<bool> \n";
+    std::cerr << program_invocation_name
+              << ": User cannot create online repository, not enough "
+                 "information\n"
+              << "Must fill fields --repo <string> , --Des <string> and --type "
+                 "<bool> \n";
   }
 
   /*if a commit trip is made all these rules apply */
   if (t->commit) {
+    /*check g trip */
+    if (strstr(subcommand.c_str(), "commit") != NULL)
+      errorT2("Err: used commit in --git and -c / --commit together");
     /* if not message trip  */
     if (!t->message) {
       messagebox = " -m 'commit made' ";

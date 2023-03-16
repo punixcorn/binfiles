@@ -1,7 +1,7 @@
 CC=g++
 option=-h
 DIR=
-FLAGS= -static -g -std=c++17 -O3 -Walloca -Walloc-zero -Warray-bounds -Wbool-compare -Wconversion-null -Wformat -Wformat-overflow -Wunused-variable -Wuseless-cast -Wvector-operation-performance --debug
+FLAGS= -static -g -std=c++17 --all-warnings --debug
 BOOST_FLAGS= -lboost_program_options -lboost_exception -lboost_system
 
 # these will run cmake which the libs are dynamic
@@ -38,3 +38,4 @@ clean:
 	@rm Main.o gitalias_Static
 	@rm -rf build
 	@rm -rf bin
+	@echo "Cleaning Done"
