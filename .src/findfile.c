@@ -18,10 +18,10 @@ void run(char *exe_name);
 
 int main(int argc, char **argv) {
   if (argc >= 2) {
-    if (*(*(argv + 1)) == '-' && *(*(argv + 1) + 1) == 'h') {
+    if (strcmp(*(argv + 1), "-h") == 0) {
       fprintf(stdout,
               "Usage : %s [ path ] [ file/directory ]\n"
-              "if a path is not included, it will start from \"\/\"\n",
+              "if a path is not included, it will start from \"\\\"\n",
               *(argv));
       exit(0);
     }
