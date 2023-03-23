@@ -6,5 +6,12 @@ Usage : name [ options ... ]
 -o         do something
 
 if invalid argument:
-name : error, invalid arguments passed...
+exe-name : error, invalid arguments passed...
 try -h for help 
+
+if other errors:
+exe-name : error type, reason & help 
+
+
+c++ format = c++20 -> 2x
+c format = c11 -> c2x 

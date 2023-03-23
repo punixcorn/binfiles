@@ -3,8 +3,9 @@ F1= -std=gnu2x
 F2= -std=c2x 
 D1= --all-warnings -g
 D2=
-FILE=test.c #move file into test.c, then do edits, later move back
+FILE= 
 args=
+of=
 
 run: all-ansi 
 	@echo "==========================RUNNING===========================" && [ -f ./cli ] && ./cli ${args} 
@@ -27,6 +28,8 @@ debug-ansi: obj.o
 obj.o: ${FILE}
 	$(CC) -c ${FILE} -o obj.o
 
+copy: cli 
+	cp cli ../${of}
 clean:
 	@echo "cleaning..."
 	@touch cli obj.o
