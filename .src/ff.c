@@ -16,6 +16,7 @@ typedef struct {
   _Bool pTrip;
   _Bool fTrip;
   _Bool cTrip;
+  _Bool vTrip;
 } Trip;
 Trip trip;
 
@@ -30,7 +31,8 @@ int main(int argc, char **argv) {
       fprintf(stdout,
               "Usage : %s [ path ] [ file/directory ] [ parameters... ]\n"
               "-h                     print this message\n"
-              "-p --params [args...]  take in normal find parameters\n\n"
+              "-p --params [args...]  take in normal find parameters\n"
+              "-v                     view command before running\n"
               "if a path is not included, it will start from \"/\"\n"
               "path must be an absolute path\n",
               *(argv));
@@ -71,6 +73,8 @@ void sort(const char *str, char **argv, int iter, const int argc) {
         if (*(argv + iter) != NULL)
           putsinto(temp, 2, *(argv + iter), " ");
       };
+    } else if (strcmp(str, "-v") == 0) {
+      trip.vTrip = true;
     }
     break;
   case '/':
@@ -103,7 +107,10 @@ void run(char *exe_name) {
     exit(1);
   }
   putsinto(command, 3, "' ", temp, " 2> /dev/null");
-  printf("%s\n", command);
-  exit(0);
+  if (trip.vTrip) {
+    printf("Command : %s\nPress any key to continue...", command);
+    getc(stdin);
+  }
   system(command);
+  exit(0);
 }
