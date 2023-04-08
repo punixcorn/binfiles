@@ -1,7 +1,7 @@
 /* Copyright 2023 punicorn
  *
- * Gitalias re-writeen in cpp for long options as get_optlong did not meet
- * requirements
+ * Gitalias a git alias
+ * move all string copies  to std::string_view
  */
 
 /* boost includes */
@@ -15,6 +15,7 @@
 #include <iostream>
 #include <new>
 #include <string>
+#include <string_view>
 #include <vector>
 /*C includes*/
 #include <cstddef>
@@ -40,19 +41,19 @@ struct Trips {
 
 /* ============== function declarations ================*/
 /* append into subcommand [ ret: void ]*/
-void Isubcommand(std::string s1, std::string s2);
+void Isubcommand(const std::string_view &s1, const std::string_view &s2);
 /* prints error message e with help message and kills the program [ ret: void
  * ]*/
-auto errorT1(std::string e) -> void;
+auto errorT1(const std::string_view &e) -> void;
 /* prints error message e and kills the program  [ ret: void ]*/
-auto errorT2(std::string e) -> void;
-/* check is something exists at place [ ret: void ]*/
-auto getdir(std::string place, std::string thing) -> bool;
+auto errorT2(const std::string_view &e) -> void;
+/* check is something exists at place [ ret: bool ]*/
+auto getdir(const std::string &place, const std::string_view &thing) -> bool;
 /* checks if you have a git repo init [ ret: bool ]*/
 auto getGitInfo() -> bool;
 /* check for staged files [ ret: bool ]*/
 auto Checkadd() -> bool;
-/* create an online repository [ ret: std::string ]*/
+/* create an online repository [ ret: void ]*/
 auto createOnlineRepo() -> void;
 /* runs the command [ ret: void ]*/
 auto run(bool v) -> void;
@@ -63,7 +64,7 @@ auto parse(Trips *t) -> void;
 int main(int argc, char *argv[]) {
 
   if (argc < 2) {
-    errorT1((std::string) "No arguments passed...");
+    errorT1("No arguments passed...");
   }
 
   Trips *T = new (std::nothrow) Trips;
@@ -317,25 +318,26 @@ int main(int argc, char *argv[]) {
 }
 /*===== End of Main =======*/
 
-auto Isubcommand(std::string s1, std::string s2) -> void {
+auto Isubcommand(const std::string_view &s1, const std::string_view &s2)
+    -> void {
   subcommand += s1;
   if (s2.length() != 0)
     subcommand += s2;
 }
 
-auto errorT2(std::string e) -> void {
+auto errorT2(const std::string_view &e) -> void {
   std::cerr << program_invocation_name << ": " << e;
   exit(1);
 }
 
-auto errorT1(std::string e) -> void {
+auto errorT1(const std::string_view &e) -> void {
   std::cerr << program_invocation_name << ": " << e << "\n try \" "
             << program_invocation_name << " --help \" for more information "
             << std::endl;
   exit(1);
 }
 
-auto getdir(std::string place, std::string thing) -> bool {
+auto getdir(const std::string &place, const std::string_view &thing) -> bool {
   DIR *d;
   struct dirent *dir;
   d = opendir(place.c_str());
@@ -391,8 +393,7 @@ auto Checkadd() -> bool {
   if (fd == NULL || temp == NULL)
     errorT2("Program Crahsed...\n");
   while (fgets(temp, 1023, fd)) {
-    std::string tempcmp;
-    tempcmp = temp;
+    std::string_view tempcmp{temp};
     if (tempcmp == "Changes not staged for commit:\n" ||
         tempcmp == "No commits yet\n" ||
         tempcmp == "nothing added to commit but untracked files present (use "
@@ -527,7 +528,6 @@ auto parse(Trips *t) -> void {
   /* === User repo creation ===*/
 
   if (t->repoMode && t->repoName && t->repoDes) {
-    std::string repoStr;
     createOnlineRepo();
   } else if (t->repoMode || t->repoDes || t->repoName) {
     std::cerr << program_invocation_name
