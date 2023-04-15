@@ -1,7 +1,6 @@
 /* Copyright 2023 punicorn
  *
  * Gitalias a git alias
- * move all string copies  to string_view
  */
 
 /* boost includes */
@@ -341,11 +340,13 @@ int main(int argc, char *argv[]) {
 }
 /*===== End of Main =======*/
 
+
 auto Isubcommand(const string_view &s1, const string_view &s2) -> void {
   subcommand += s1;
   if (s2.length() != 0)
     subcommand += s2;
 }
+
 
 auto errorT2(const string_view &e) -> void {
   cerr << program_invocation_name << ": " << e;

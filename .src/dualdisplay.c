@@ -10,13 +10,19 @@ int main(int argc, char **argv) {
   char *monitor = NULL;
   switch (argc) {
   case 1:
+    argc = 0;
     break;
   case 2:
-    if (strcmp(*(argv + 1), "-h") == 0) {
+    if (strncmp(argv[1], "-h", 2) == 0 ||
+        strncmp(argv[1], "--help", strlen("--help")) == 0) {
       printf("%s: Used to setup dual displays\n"
              "-h                      print this help message\n"
              "-m <monitor name>       default is eDP1\n",
              *(argv));
+    } else if (strncmp(argv[1], "-s", 2) == 0 ||
+               strncmp(argv[1], "--show", strlen("--show")) == 0) {
+      argc = 1; // using argc so i dont have to create another variable
+      break;
     } else {
       fprintf(stderr,
               "Error: Invaild arguments passed\n\tTry -h for more info\n");
@@ -24,6 +30,7 @@ int main(int argc, char **argv) {
     exit(0);
     break;
   case 3:
+    argc = 0;
     if (strcmp(*(argv + 1), "-m") == 0) {
       monitor = *(argv + 2);
       if (monitor == NULL) {
@@ -33,39 +40,37 @@ int main(int argc, char **argv) {
     }
     break;
   default:
-    fprintf(stderr, "Invaild arguments passed\n");
+    fprintf(stderr, "Invalid arguments passed\n");
     exit(1);
     break;
   }
-
   FILE *fd = popen("xrandr", "r");
   char *buffer = (char *)malloc(1024 * sizeof(char));
   if (buffer == NULL) {
     fprintf(stderr, "Unable to allocate space for buffer\n");
     exit(1);
   }
-  // assert(fscanf(fd, "%1023s", buffer));
   assert(fread(buffer, sizeof(char), 1024, fd));
   pclose(fd);
 
-#if debug
-  printf("buffer := %s\n", buffer);
-#endif
-  monitor = monitor == NULL ? "eDP1" : monitor;
+  if (argc == 1)
+    printf("======= buffer =======\n%s======= buffer =======\n", buffer);
+  monitor = (monitor == NULL ? (char *)"eDP1" : monitor);
   if (strstr(buffer, monitor) != NULL) {
-    fprintf(stdout, "Monitor found\n");
+    fprintf(stdout, "Main Monitor found\n");
   }
   if (strstr(buffer, "HDMI1 connected") != NULL) {
     printf("HDMI connection found\n");
-    printf("%s\n%s\n", "eDP1 : primary display is on the left",
-           "HDMI1 : secondary display is on the left");
+    printf("%s %s\n", "Placing eDP1 Right", "HDMI1 left");
     sprintf(buffer,
             "xrandr --output %s --primary --mode 1920x1080 --rotate normal "
-            "--output HDMI1 --mode 1920x1080 --rotate normal --right-of eDP1",
-            monitor);
+            "--output HDMI1 --mode 1920x1080 --rotate normal --right-of %s",
+            monitor, monitor);
+    printf("command:\n%s\n", buffer);
+    system(buffer);
     exit(0);
   } else {
-    fprintf(stderr, "%s: %s\n", *argv, "ERR : only one display was read");
+    fprintf(stderr, "%s: %s\n", *argv, "ERR :Could not find HDMI connection");
     exit(1);
   }
 }
