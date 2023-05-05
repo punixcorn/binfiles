@@ -1,6 +1,9 @@
 option=-h
 DIR=
 
+allmannual:
+	g++ -std=c++20 Main.cxx -lfmt -lboost_system -lboost_execption -lboost_program_options -o main 
+
 all: build
 
 allClean: Main.cxx clean build
