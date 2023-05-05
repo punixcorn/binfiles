@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #define null NULL
+
 /*will add options to pick if mainscreen position relative to others */
 /* will add error handling later */
 
@@ -79,8 +80,10 @@ int main(int argc, char **argv) {
             "--output HDMI1 --mode %s --rotate normal --right-of %s",
             monitor, size, monitor);
     system(buffer);
-    printf("command:\n%s\n", buffer);
-    printf("eDP1 Right HDMI1 left\n");
+    if (argc == 1) {
+      printf("command:\n%s\n", buffer);
+      printf("eDP1 Right HDMI1 left\n");
+    }
     exit(0);
   } else {
     fprintf(stderr, "Could not find HDMI connection [ ERR ]\n");

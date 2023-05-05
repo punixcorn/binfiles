@@ -11,8 +11,6 @@
 /* C++ includes */
 #include <algorithm>
 #include <array>
-#include <fmt/core.h>
-#include <fmt/format.h>
 #include <fstream>
 #include <iostream>
 #include <new>
@@ -29,11 +27,11 @@
 #include <unistd.h>
 
 namespace opt = boost::program_options;
-using std::string, std::vector, std::string_view, std::cout, std::cin,
-    std::nothrow, fmt::print,
-    std::ifstream; // file is too bloated
+using std::string, std::vector, std::string_view, std::cout, std::cerr,
+    std::nothrow, std::endl, std::cin, std::ifstream;
 
 /*global varibales -> helps prevents extreme function arguments*/
+/* could use a class and functors */
 string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
     command = "[[ -f /bin/git || -f /usr/bin/git ]] ";
 bool mode; // for the user request;
@@ -74,19 +72,15 @@ int main(int argc, char *argv[]) {
 
   Trips *T = new (nothrow) Trips;
   if (T == NULL) {
-    print(stderr,
-          "{} : Program Crashed...\n"
-          "Err: Trip could not be allocated\n",
-          program_invocation_name);
+    cerr << program_invocation_name << ": Program Crashed...\n"
+         << "Err: Trip could not be allocated\n";
     exit(1);
   }
   try {
     memset(T, 0, sizeof(Trips));
   } catch (...) {
-    print(stderr,
-          "{} :Program Crashed...\n"
-          "Err : Trip reset<memset()>\n",
-          program_invocation_name);
+    cerr << program_invocation_name << ": Program Crashed...\n"
+         << "Err : Trip reset<memset()>\n";
     exit(1);
   }
   try {
@@ -170,17 +164,17 @@ int main(int argc, char *argv[]) {
     if (args.count("add")) {
       T->add = true;
       addbox += " && git add ";
-      print("Files added: ");
+      cout << "Files added: ";
       for (auto i : args["add"].as<vector<string>>()) {
         if (i == ".") {
-          print("all ");
+          cout << "all ";
         } else {
-          print("{} ", i);
+          cout << i << " ";
         }
         addbox += i;
         addbox += " ";
       }
-      print("\n");
+      cout << endl;
     }
     if (args.count("branch")) {
       T->branch = true;
@@ -204,7 +198,7 @@ int main(int argc, char *argv[]) {
     if (args.count("Pull")) {
       T->pull = true;
       if (args["Pull"].as<string>() == "all") {
-        print("Pulling all remote branches..\n");
+        cout << "Pulling all remote branches..\n";
         Isubcommand(" && git push --all ", "");
       } else {
         Isubcommand(" && git pull ", args["Pull"].as<string>());
@@ -213,7 +207,7 @@ int main(int argc, char *argv[]) {
     if (args.count("push")) {
       T->push = true;
       if (args["push"].as<string>() == "all") {
-        print("Pushing all branches...\n");
+        cout << "Pushing all branches...\n";
         Isubcommand(" && git push --all ", "");
       } else {
         Isubcommand(" && git push ", args["push"].as<string>());
@@ -247,8 +241,8 @@ int main(int argc, char *argv[]) {
             clonestr += tempstr;
             clonestr += ".git ";
           } else {
-            print("{} : using default Protocol for cloning : https...\n",
-                  program_invocation_name);
+            cout << program_invocation_name
+                 << ": using default Protocol for cloning : https...\n";
             clonestr += "https://github.com/";
             clonestr += tempstr;
             clonestr += " ";
@@ -335,13 +329,13 @@ int main(int argc, char *argv[]) {
       Isubcommand(" && ", grabstr);
     }
   } catch (const opt::error &ex) {
-    print(stderr, "{} : {} ", program_invocation_name, ex.what());
+    cerr << program_invocation_name << ": " << ex.what() << "\n";
     exit(1);
   }
   try {
     parse(T);
   } catch (...) {
-    print("{} : Parsing options failed...\n", program_invocation_name);
+    cout << program_invocation_name << ": Parsing options failed..." << endl;
     exit(1);
   }
   exit(0);
@@ -355,13 +349,13 @@ auto Isubcommand(const string_view &s1, const string_view &s2) -> void {
 }
 
 auto errorT2(const string_view &e) -> void {
-  print(stderr, "{} : {}\n", program_invocation_name, e);
+  cerr << program_invocation_name << ": " << e;
   exit(1);
 }
 
 auto errorT1(const string_view &e) -> void {
-  print(stderr, "{} : try {} \ntry {} --help for more information\n",
-        program_invocation_name, e, program_invocation_name);
+  cerr << program_invocation_name << ": " << e << "\n try \" "
+       << program_invocation_name << " --help \" for more information " << endl;
   exit(1);
 }
 
@@ -475,13 +469,18 @@ auto createOnlineRepo() -> void {
   else
     strMode = "false";
   /* consent lol */
-  print(" You are about to create an online repository with the following "
-        "data :\n"
-        "\tName of repository : {}\n"
-        "\tDescription : {}\n"
-        "\tPrivate: {}\n"
-        "continue with creation of the online repository [y,N] : ",
-        reponame, repodes, strMode);
+  cout << " You are about to create an online repository with the following "
+          "data :\n"
+          "\tName of repository : "
+       << reponame
+       << "\n"
+          "\tDescription : "
+       << repodes
+       << "\n"
+          "\tPrivate: "
+       << strMode
+       << "\n"
+          "continue with creation of the online repository [y,N] : ";
   cin >> confirm;
   if ((char)tolower(confirm) != 'y')
     errorT2("User has stopped the process\n");
@@ -504,15 +503,15 @@ auto createOnlineRepo() -> void {
           "Bad credentials : Please update your token, it may have expired\n");
     }
   }
-  print("{} : {} repository created succesfully\n", program_invocation_name,
-        reponame);
+  cout << program_invocation_name << ": " << reponame
+       << " repository created succesfully\n";
 }
 
 auto run(bool v) -> void {
   if (subcommand.length() > 0)
     command += subcommand;
   if (v) {
-    print("Gitalias VERSION 2.4.1\nCommand generated: {}\n", command);
+    cout << "Gitalias VERSION 2.4.1\nCommand generated: " << command << endl;
   }
   system(command.c_str());
   exit(0);
@@ -531,8 +530,8 @@ auto parse(Trips *t) -> void {
       if (t->init) {
         parseCommand += " && git init ";
       } else {
-        print("Git repository not found\nDo you want to initialize a git "
-              "repository here?[y,N]: ");
+        cout << "Git repository not found\nDo you want to initialize a git "
+                "repository here?[y,N]: ";
         cin >> chrInit;
         if ((char)tolower(chrInit) != 'y') {
           t->init = false;
@@ -543,7 +542,7 @@ auto parse(Trips *t) -> void {
       }
     } else {
       if (t->init)
-        print("Git repo already exits skipping...\n");
+        cout << "Git repo already exits skipping...\n";
       t->init = false;
     }
   }
@@ -552,11 +551,11 @@ auto parse(Trips *t) -> void {
   if (t->repoMode && t->repoName && t->repoDes) {
     createOnlineRepo();
   } else if (t->repoMode || t->repoDes || t->repoName) {
-    print(stderr,
-          "{} : User cannot create online repository, not enough information\n "
-          "Must "
-          "fill fields --repo [string] , --Des [string] and --type [bool] \n",
-          program_invocation_name);
+    cerr << program_invocation_name
+         << ": User cannot create online repository, not enough "
+            "information\n"
+         << "Must fill fields --repo <string> , --Des <string> and --type "
+            "<bool> \n";
   }
 
   /*if a commit trip is made all these rules apply */
