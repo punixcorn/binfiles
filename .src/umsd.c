@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+/* [ file name ] : umsd
+ * [ file purpose ] : a wrapper umount
+ * [ mode ] : stable
+ * [ sample ] : umsd /mnt
+ * [ sample2 ] : umsd -lsblk
+ */
+
 char command[100];
 int main(int argc, char **argv) {
 

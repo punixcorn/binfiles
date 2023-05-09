@@ -4,11 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-/* ff = findfile
- * a wrapper around find , automatically adds sudo and -iname normal find args
- * can be passed using -p / --params $ ff /home/unix maincargo.cpp --params
- * -printf ...
+
+/* [ file name ] : ff
+ * [ file purpose ] : a wrapper around find , automatically adds sudo and -iname
+ * normal find args can be passed using -p / --params $ ff /home/unix
+ * maincargo.cpp --params -printf ...
+ * [ mode ] : stable
+ * [ sample ] : ff main.c
+ * [ sample2 ] : ff /home/test/ main.c
+ * [ sample3 ] : ff /mnt main.c --params [normal find params]
  */
+
 char command[500], place[2][100], temp[200];
 
 int i = 1;

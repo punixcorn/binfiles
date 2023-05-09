@@ -3,7 +3,13 @@
 #include <string.h>
 #include <unistd.h>
 
-//$ msd sda1 /mnt
+/* [ file name ] : msd
+ * [ file purpose ] : a wrapper around mount
+ * [ mode ] : stable
+ * [ sample ] : msd /mnt /sda2
+ * [ sample2 ] : msd -lsblk
+ */
+
 char command[120];
 char temp[100]; // input puts into command
 

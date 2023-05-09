@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+/* [ file name ] : cnet
+ * [ file purpose ] : ping archlinux.org aka check network
+ * [ mode ] : stable
+ * [ sample ] : cnet
+ * [ sample2 ]: cnet 4
+ */
+
 char command[100];
 void Error(char *name) {
   fprintf(stderr,

@@ -6,6 +6,12 @@
 #include <unistd.h>
 #define null NULL
 
+/* [ file name ] : setHdmi
+ * [ file purpose ] : a wrapper xrandr for setting up hdmi
+ * [ mode ] : stable
+ * [ sample ] : setHdmi
+ * [ sample2 ] : setHdmi -m eDP1
+ */
 /*will add options to pick if mainscreen position relative to others */
 /* will add error handling later */
 

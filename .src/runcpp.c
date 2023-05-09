@@ -3,6 +3,13 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+/*run family
+ * [file] : *run
+ * [purpose] : look for a main.[format] and run
+ * [stable] : stable
+ * [sample] : runcpp [ runs a main.cpp ]
+ * [sample2] : runcpp foo.cpp [ runs a foo.cpp file ]
+ * */
 char command[100]; // input puts into command
 char *cc, *ver, *debug, *flags, *filename;
 void runcpp(void) {
