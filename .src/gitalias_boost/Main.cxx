@@ -27,9 +27,11 @@
 #include <unistd.h>
 
 namespace opt = boost::program_options;
-using namespace std; // file is too bloated
+using std::string, std::vector, std::string_view, std::cout, std::cerr,
+    std::nothrow, std::endl, std::cin, std::ifstream;
 
 /*global varibales -> helps prevents extreme function arguments*/
+/* could use a class and functors */
 string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
     command = "[[ -f /bin/git || -f /usr/bin/git ]] ";
 bool mode; // for the user request;
@@ -115,7 +117,7 @@ int main(int argc, char *argv[]) {
         "2nd arg : number of commits to reset back")(
         "git,g", opt::value<vector<string>>()->multitoken(),
         "run git command =[  git <arg> ] if you add more commands "
-        "append git to it eg:  ga -G \"add .\" \" git commit -m \"foo\" \" ... "
+        "append git to it eg:  ga -G \"add .\" \" git commit -m 'foo' \" ... "
         "]")("Grab,G", opt::value<string>(),
              "grab a specific folder from a github repo");
 
@@ -262,7 +264,7 @@ int main(int argc, char *argv[]) {
     }
     if (args.count("origin")) {
       size_t buffersize = 256;
-      char *otemp = new (nothrow) char[buffersize];
+      char *otemp = new (nothrow) char[buffersize]{};
       T->origin = true;
       snprintf(otemp, buffersize,
                " && git remote add origin git@github.com:%s && git branch -M "
@@ -340,13 +342,11 @@ int main(int argc, char *argv[]) {
 }
 /*===== End of Main =======*/
 
-
 auto Isubcommand(const string_view &s1, const string_view &s2) -> void {
   subcommand += s1;
   if (s2.length() != 0)
     subcommand += s2;
 }
-
 
 auto errorT2(const string_view &e) -> void {
   cerr << program_invocation_name << ": " << e;
@@ -424,9 +424,11 @@ auto Checkadd() -> bool {
       /*if string match is found we return false cus we are checking for no
        * add
        */
+      fclose(fd);
       return false;
     }
   };
+  fclose(fd);
   return true;
 }
 

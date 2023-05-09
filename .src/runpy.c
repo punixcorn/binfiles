@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/*run family
+ * [file] : *run
+ * [purpose] : look for a main.[format] and run
+ * [stable] : stable
+ * [sample] : runpy [ runs a main.py ]
+ * [sample2] : runpy foo.py [ runs a foo.py file ]
+ * */
+
 char command[100]; // input puts into command
 
 void runpy(char *str) {

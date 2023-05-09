@@ -7,10 +7,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-/* file name : mv2
- * file purpose: create a directory if it doesnt exist when moving a file
- * mode : stable , not fully tested , debug codes still avaliable
- * sample : mv2 --mkdir alacritty.yml ~/.config/alacritty/
+/* [file name] : mv2
+ * [file purpose ]: create a directory if it doesnt exist when moving a file
+ * [mode] : stable , not fully tested , debug codes still avaliable
+ * [sample]: mv2 --mkdir alacritty.yml ~/.config/alacritty/
  */
 
 char *pname = "mv2";
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
       strcat(command, *(argv + i));
     i++;
   }
-  
+
   // checking
   char *temp;
   if ((temp = strstr(command, "--mkdir")) != NULL)

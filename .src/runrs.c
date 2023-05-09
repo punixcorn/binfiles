@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/*run family
+ * [file] : *run
+ * [purpose] : look for a main.[format] and run
+ * [stable] : stable
+ * [sample] : runcpp [ runs a main.cpp ]
+ * [sample2] : runcpp foo.cpp [ runs a foo.cpp file ]
+ * */
+
 char command[100]; // input puts into command
 
 void runrs(char *str) {
