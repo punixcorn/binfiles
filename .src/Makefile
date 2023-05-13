@@ -10,8 +10,6 @@ of=
 target=ansi 
 
 all : $(target)
-	@echo "======================================================"
-	@./cli
 
 ansi: obj.o
 	$(CC) ${FILE} ${F2} ${D1} ${D2} -o cli
@@ -23,8 +21,6 @@ gnu: obj.o
 
 cpp: obj.o
 	$(CCP) $(FILE) -lfmt -o cli 
-	@echo "======================================================"
-	@./cli
 
 cpp.o: $(FILE)
 	$(CCP) -c $(FILE) -lfmt -std=c++2a $(D1) $(D2)  -o obj.o
@@ -35,6 +31,10 @@ obj.o: ${FILE}
 
 copy: cli 
 	cp cli ../${of}
+
+run: cli 
+	@echo "======================================================"
+	@./cli
 
 clean:
 	@echo "cleaning..."
