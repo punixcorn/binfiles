@@ -20,14 +20,14 @@ int main(int argc, char **argv) {
               "file.asm              file to run\n"
               "-h                    print this message\n"
               "[ no arguments  ]     looks for a main.asm file to run\n",
-              *(argv));
+              argv[0]);
       exit(0);
     }
-    runasm(*(argv + 1));
+    runasm(argv[1]);
   } else {
     fprintf(stderr,
             "%s : error, invalid arguments passed\n"
             "try %s -h for help\n",
-            *(argv), *(argv));
+            argv[0], argv[0]);
   }
 }

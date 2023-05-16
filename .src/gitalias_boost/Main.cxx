@@ -38,6 +38,8 @@ bool mode; // for the user request;
 vector<string>(Sreset);
 struct Trips
 {
+    // constructor resets everything in struct
+    Trips() { memset(this, 0, sizeof(*this)); };
     bool commit, message, add, init, branch, switch_, deleteBranch, merge, pull,
       push, origin, log, status, repoName, repoDes, repoMode, verbose, Rreset,
       git;
@@ -81,13 +83,13 @@ main(int argc, char* argv[])
     if (argc < 2) {
         errorT1("No arguments passed...");
     }
-
-    Trips* T = new (nothrow) Trips;
+    Trips* T = new (nothrow) Trips();
     if (T == NULL) {
         cerr << program_invocation_name << ": Program Crashed...\n"
              << "Err: Trip could not be allocated\n";
         exit(1);
     }
+    /*
     try {
         memset(T, 0, sizeof(Trips));
     } catch (...) {
@@ -95,6 +97,7 @@ main(int argc, char* argv[])
              << "Err : Trip reset<memset()>\n";
         exit(1);
     }
+    */
     try {
         opt::options_description desc(string(*argv).append(" options"));
         desc.add_options()("help,h", "print this message")(
@@ -134,16 +137,18 @@ main(int argc, char* argv[])
           "description for the online repo * [ii]")(
           "type,t",
           opt::value<bool>(&mode)->value_name("bool"),
-          "if repo should be private *[iii]")(
+          "if repo should be private * [iii]")(
           "undo,u",
           opt::value<vector<string>>()->multitoken(),
-          "*Reset back to a commit , "
-          "1st arg : type of reset ( hard / soft / mixed ) , "
-          "2nd arg : number of commits to reset back")(
+          "*Reset back to a commit ,eg gitalias -u "
+          "[ hard / soft / mixed ] "
+          "[ number of commits to reset back ]")(
           "git,g",
           opt::value<vector<string>>()->multitoken(),
-          "run git command =[  git <arg> ] if you add more commands "
-          "append git to it eg:  ga -G \"add .\" \" git commit -m 'foo' \" ... "
+          "append git commands eg [ gitalias -g \" git ... \" ] for extra "
+          "commands "
+          "append git to it eg: [ ga -G \"add .\" \" git commit -m 'foo' \" "
+          "... ] "
           "]")("Grab,G",
                opt::value<string>(),
                "grab a specific folder from a github repo");
@@ -157,7 +162,7 @@ main(int argc, char* argv[])
                    args);
         opt::notify(args);
         if (args.count("help")) {
-            /* fixing the stream  maybe?
+            /* appending more info into the string ::
             only needed when theres a command for only shorthands
             stringstream stream;
             stream << desc;
@@ -217,7 +222,7 @@ main(int argc, char* argv[])
         }
         if (args.count("delete")) {
             T->deleteBranch = true;
-            Isubcommand(" && git branch -d ", args["delete"].as<string>());
+            Isubcommand(" && git branch -D ", args["delete"].as<string>());
         }
         if (args.count("Merge")) {
             T->merge = true;
@@ -315,22 +320,32 @@ main(int argc, char* argv[])
 
         if (args.count("undo")) {
             T->Rreset = true;
+            int trip = int(0);
             string Sreset_temp;
-            for (auto s : args["undo"].as<vector<string>>()) {
-                if (s == "soft" || s == "s") {
-                    Sreset_temp += "--soft HEAD~";
-                } else if (s == "hard" || s == "h") {
-                    Sreset_temp += "--hard HEAD~";
-                } else if (s == "mixed" || s == "m") {
-                    Sreset_temp += "--mixed HEAD~";
-                } else if (atoi(s.c_str()) != 0) {
-                    if (Sreset_temp.length() > 0) Sreset_temp += s;
+            for (auto str : args["undo"].as<vector<string>>()) {
+                if (str == "soft" || str == "s") {
+                    if (trip == 0) {
+                        Sreset_temp += "--soft HEAD~";
+                        trip += 1;
+                    }
+                } else if (str == "hard" || str == "h") {
+                    if (trip == 0) {
+                        Sreset_temp += "--hard HEAD~";
+                        trip += 1;
+                    }
+                } else if (str == "mixed" || str == "m") {
+                    if (trip == 0) {
+                        Sreset_temp += "--mixed HEAD~";
+                        trip += 1;
+                    }
+                } else if (atoi(str.c_str()) != 0) {
+                    if (Sreset_temp.length() > 0) Sreset_temp += str;
                 }
             }
             if (Sreset_temp.length() <= 0)
                 errorT2(
                   "Invalid parameters passed to --undo options are [ type of "
-                  "reset (hard/soft) ] [ number of commits back ] \n");
+                  "reset (hard/mixed/soft) ] [ number of commits back ] \n");
 
             Resetcommand += " && git reset ";
             Resetcommand += Sreset_temp;
@@ -478,7 +493,7 @@ auto
 createOnlineRepo() -> void
 {
     /* variables we need */
-    string token, strMode;
+    string token;
     char* crepo = new (nothrow) char[500];
     if (crepo == NULL) errorT2("Program Crashed...\n");
     char confirm;
@@ -507,12 +522,7 @@ createOnlineRepo() -> void
         errorT2(
           "Was expecting a Token of char[40]\nFix: remove any whitespace in "
           "/usr/githubToken\n");
-
     /*converting bool mode to strings */
-    if (mode)
-        strMode = "true";
-    else
-        strMode = "false";
     /* consent lol */
     cout << " You are about to create an online repository with the following "
             "data :\n"
@@ -522,8 +532,8 @@ createOnlineRepo() -> void
             "\tDescription : "
          << repodes
          << "\n"
-            "\tPrivate: "
-         << strMode
+            "\tMode: "
+         << (mode == true ? "Private" : "Public")
          << "\n"
             "continue with creation of the online repository [y,N] : ";
     cin >> confirm;
@@ -542,7 +552,7 @@ createOnlineRepo() -> void
              token.c_str(),
              reponame.c_str(),
              repodes.c_str(),
-             strMode.c_str());
+             (mode == true ? "true" : "false"));
     /* running it here instead of passing it to run */
     FILE* instance = popen(crepo, "r");
     char buffer[100];
@@ -561,7 +571,7 @@ run(bool v) -> void
 {
     if (subcommand.length() > 0) command += subcommand;
     if (v) {
-        cout << "Gitalias VERSION 2.4.1\nCommand generated: " << command
+        cout << "Gitalias VERSION 2.4.9\nCommand generated: " << command
              << endl;
     }
     system(command.c_str());
