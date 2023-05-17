@@ -108,7 +108,8 @@ int main(int argc, char **argv) {
             "xrandr --output %s --primary --mode 1920x1080 --rotate normal "
             "--output HDMI1 --mode %s --rotate normal --right-of %s",
             monitor, size, monitor);
-    char *command[15] = {
+    /*
+     char *command[15] = {
         "xrandr",    "--output",        monitor,    "--primary",  "--mode",
         "1920x1080", "--rotate normal", "--output", "HDMI1",      "--mode",
         size,        "--rotate",        "normal",   "--right-of", monitor};
@@ -123,7 +124,9 @@ int main(int argc, char **argv) {
       fprintf(stderr, "%s Failed to set Display \n", err);
     } else {
       printf("%s Hdmi has been setup sucessfully \n", ok);
-    }
+    }*/
+    system(buffer);
+    printf("%s Hdmi has been setup sucessfully \n", ok);
     if (argc == 1) {
       printf("command:\n%s\n", buffer);
       printf("%s Right HDMI1 left\n", monitor);
