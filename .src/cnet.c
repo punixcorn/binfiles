@@ -10,7 +10,6 @@
  * [ sample2 ]: cnet 4
  */
 
-char command[100];
 void Error(char *name) {
   fprintf(stderr,
           "ERR : Invaild values passed\n"
@@ -19,25 +18,23 @@ void Error(char *name) {
   exit(1);
 }
 int main(int argc, char **argv) {
+  char command[100];
   sprintf(command, "ping archlinux.org");
-#if DEBUG
-  printf("this argc = %d\n", argc);
-#endif
   if (argc == 1) {
     system(command);
     exit(0);
   }
   if (argc > 2)
-    Error(*(argv));
-  if (*(*(argv + 1)) == '-' && *(*(argv + 1) + 1) == 'h') {
+    Error(argv[0]);
+  if (strcmp(argv[1], "-h") == 0) {
     fprintf(stdout, "Usage : %s [ number of pings ]\n", *(argv));
     exit(0);
   }
-  if (atoi(*(argv + 1)) == 0) {
-    Error(*(argv));
+  if (atoi(argv[1]) == 0) {
+    Error(argv[0]);
   }
   strcat(command, " -c");
-  strcat(command, *(argv + 1));
+  strcat(command, argv[1]);
   system(command);
   exit(0);
 }

@@ -1,5 +1,4 @@
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +6,8 @@
 
 /* [ file name ] : ff
  * [ file purpose ] : a wrapper around find , automatically adds sudo and -iname
- * normal find args can be passed using -p / --params $ ff /home/unix
- * maincargo.cpp --params -printf ...
+ * normal find args can be passed using -p / --params
+ * $ ff /home/unix maincargo.cpp --params -printf ...
  * [ mode ] : stable
  * [ sample ] : ff main.c
  * [ sample2 ] : ff /home/test/ main.c
@@ -19,21 +18,21 @@ char command[500], place[2][100], temp[200];
 
 int i = 1;
 typedef struct {
-  _Bool pTrip;
-  _Bool fTrip;
-  _Bool cTrip;
-  _Bool vTrip;
+  bool pTrip;
+  bool fTrip;
+  bool cTrip;
+  bool vTrip;
 } Trip;
 Trip trip;
 
 void putsinto(char *mainstr, int index, ...);
-void sort(const char *str, char **argv, int iter, const int argc);
+void parse(const char *str, char **argv, int iter, const int argc);
 void run(char *exe_name);
 
 int main(int argc, char **argv) {
   memset(&trip, 0, sizeof(Trip));
   if (argc >= 2) {
-    if (strcmp(*(argv + 1), "-h") == 0) {
+    if (strcmp(argv[1], "-h") == 0) {
       fprintf(stdout,
               "Usage : %s [ path ] [ file/directory ] [ parameters... ]\n"
               "-h                     print this message\n"
@@ -41,7 +40,7 @@ int main(int argc, char **argv) {
               "-v                     view command before running\n"
               "if a path is not included, it will start from \"/\"\n"
               "path must be an absolute path\n",
-              *(argv));
+              argv[0]);
       exit(0);
     }
     goto arg;
@@ -49,11 +48,11 @@ int main(int argc, char **argv) {
     fprintf(stderr,
             "ERR: invalid arguments passed\n"
             "try %s -h for help\n",
-            *(argv));
+            argv[0]);
   exit(1);
 arg:
   while (i < argc) {
-    sort(*(argv + i), argv, i, argc);
+    parse(*(argv + i), argv, i, argc);
     i++;
   }
   run(*(argv));
@@ -69,7 +68,7 @@ void putsinto(char *mainstr, int index, ...) {
   va_end(ap);
 }
 
-void sort(const char *str, char **argv, int iter, const int argc) {
+void parse(const char *str, char **argv, int iter, const int argc) {
   switch (*(str)) {
   case '-':
     if (strcmp(str, "-p") == 0 || strcmp(str, "--params") == 0) {

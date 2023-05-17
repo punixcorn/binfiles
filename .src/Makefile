@@ -19,7 +19,7 @@ gnu: obj.o
 	$(CC) ${FILE} ${F1} ${D1} ${D2} -o cli 
 
 
-cpp: obj.o
+cpp: cpp.o
 	$(CCP) $(FILE) $(D1) -lfmt -o cli 
 
 cpp.o: $(FILE)
@@ -27,7 +27,7 @@ cpp.o: $(FILE)
 
 
 obj.o: ${FILE}
-	$(CC) -c ${FILE} -std=c++2a $(D1) $(D2) -o obj.o
+	$(CC) -c ${FILE}  $(D1) $(D2) -o obj.o
 
 copy: cli 
 	cp cli ${of}

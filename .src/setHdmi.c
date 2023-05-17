@@ -15,10 +15,24 @@
 /*will add options to pick if mainscreen position relative to others */
 /* will add error handling later */
 
+char *getbuffer() {
+  FILE *fd = popen("xrandr", "r");
+  char *buffer = (char *)malloc(1024);
+  if (buffer == NULL) {
+    fprintf(stderr, "Unable to allocate space for buffer\n");
+    exit(1);
+  }
+  assert(fread(buffer, sizeof(char), 1024, fd));
+  pclose(fd);
+  return buffer;
+}
+
 int main(int argc, char **argv) {
 
   char *monitor = null;
   char *size = "1920x1080";
+  char *err = "\e[31m[ ERR ]\e[0m";
+  char *ok = "\e[31m[ OK ]\e[0m";
 
   switch (argc) {
   case 1:
@@ -28,14 +42,31 @@ int main(int argc, char **argv) {
     if (strncmp(argv[1], "-h", 2) == 0 ||
         strncmp(argv[1], "--help", strlen("--help")) == 0) {
       printf("%s: Used to setup dual displays\n"
-             "-h                      print this help message\n"
-             "-m [ main monitor name ]        default is eDP1\n"
-             "-s --show           show the monitors available\n",
-             *(argv));
+             "-h                        print this help message\n"
+             "-m [ main monitor name ]  default is eDP1\n"
+             "-s --show                 show the monitors available\n"
+             "--off                     turn of HDMI setting\n",
+             argv[0]);
     } else if (strncmp(argv[1], "-s", 2) == 0 ||
                strncmp(argv[1], "--show", strlen("--show")) == 0) {
       argc = 1;
       break;
+    } else if (strncmp(argv[1], "-off", 3) == 0 ||
+               strncmp(argv[1], "--off", strlen("--off")) == 0) {
+
+      char *offbuffer = getbuffer();
+      if (strstr(offbuffer, "HDMI1 disconnected (normal left inverted right x "
+                            "axis y axis)") != NULL) {
+
+        fprintf(stderr,
+                "%s no HDMI setup found\nTry running \"xrandr "
+                "--output HDMI1 --off\"\n",
+                err);
+      } else {
+        system("xrandr --output HDMI1 --off");
+        printf("%s HDMI settings off\n", ok);
+      }
+      exit(0);
     } else {
       fprintf(stderr,
               "Error: Invaild arguments passed\n\tTry -h for more info\n");
@@ -57,42 +88,51 @@ int main(int argc, char **argv) {
     exit(1);
     break;
   }
-  FILE *fd = popen("xrandr", "r");
-  char *buffer = (char *)malloc(1024 * sizeof(char));
-  if (buffer == NULL) {
-    fprintf(stderr, "Unable to allocate space for buffer\n");
-    exit(1);
-  }
-  assert(fread(buffer, sizeof(char), 1024, fd));
-  pclose(fd);
 
+  char *buffer = getbuffer();
   if (argc == 1)
     printf("======= buffer =======\n%s======= buffer =======\n", buffer);
   monitor = (monitor == NULL ? (char *)"eDP1" : monitor);
 
   if (strstr(buffer, monitor) != NULL) {
-    fprintf(stdout, "Main Monitor found  [ OK ]\n");
+    fprintf(stdout, "%s Main Display found \n", ok);
   } else {
-    fprintf(stderr,
-            "main Monitor not found [ ERR ]\nrun with -m [monitor name]\n");
+    fprintf(stderr, "%s Main Display not found\nrun with -m [monitor name]\n",
+            err);
     exit(1);
   }
 
   if (strstr(buffer, "HDMI1 connected") != NULL) {
-    printf("HDMI connection found [ OK ]\n");
-    memset(buffer, 0, sizeof *buffer);
+    printf("%s HDMI connection found \n", ok);
     sprintf(buffer,
             "xrandr --output %s --primary --mode 1920x1080 --rotate normal "
             "--output HDMI1 --mode %s --rotate normal --right-of %s",
             monitor, size, monitor);
-    system(buffer);
+    char *command[15] = {
+        "xrandr",    "--output",        monitor,    "--primary",  "--mode",
+        "1920x1080", "--rotate normal", "--output", "HDMI1",      "--mode",
+        size,        "--rotate",        "normal",   "--right-of", monitor};
+    int parent = getpid();
+    int status = 0;
+    fork();
+    if (parent != getpid()) { // we are in child
+      status = execv("xrandr", command);
+      exit(0);
+    }
+    if (status == -1) {
+      fprintf(stderr, "%s Failed to set Display \n", err);
+    } else {
+      printf("%s Hdmi has been setup sucessfully \n", ok);
+    }
     if (argc == 1) {
       printf("command:\n%s\n", buffer);
-      printf("eDP1 Right HDMI1 left\n");
+      printf("%s Right HDMI1 left\n", monitor);
     }
+    free(buffer);
     exit(0);
   } else {
-    fprintf(stderr, "Could not find HDMI connection [ ERR ]\n");
+    free(buffer);
+    fprintf(stderr, "%s Could not find HDMI connection \n", err);
     exit(1);
   }
 }
