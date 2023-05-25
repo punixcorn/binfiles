@@ -1,5 +1,4 @@
 /* Copyright 2023 punicorn
- *
  * Gitalias a git alias
  */
 
@@ -30,7 +29,7 @@ namespace opt = boost::program_options;
 using std::string, std::vector, std::string_view, std::cout, std::cerr,
     std::nothrow, std::endl, std::cin, std::ifstream;
 
-/*global varibales -> helps prevents extreme function arguments*/
+/* global varibales -> helps prevents extreme function arguments*/
 /* could use a class and functors */
 string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
     command = "[[ -f /bin/git || -f /usr/bin/git ]] ";
@@ -77,15 +76,6 @@ int main(int argc, char *argv[]) {
          << "Err: Trip could not be allocated\n";
     exit(1);
   }
-  /*
-  try {
-      memset(T, 0, sizeof(Trips));
-  } catch (...) {
-      cerr << program_invocation_name << ": Program Crashed...\n"
-           << "Err : Trip reset<memset()>\n";
-      exit(1);
-  }
-  */
   try {
     opt::options_description desc(string(*argv).append(" options"));
     desc.add_options()("help,h", "print this message")(
@@ -383,7 +373,7 @@ auto getGitInfo() -> bool {
   char *temp = new (nothrow) char[buffersize];
   bool tempTrip{true};
   /* apparently fopen will bug out if there is and error hence 2>&1 is
-   * needed */
+      needed */
   fd = popen("git status 2>&1 ", "r");
   if (fd == NULL || temp == NULL)
     errorT2("Program Crashed...\n");
@@ -403,14 +393,13 @@ auto getGitInfo() -> bool {
     return !tempTrip;
   return tempTrip;
 }
+
 /* this still has issues
  * rets true if there is an add, false if not
  * this should work lmao
  * */
 auto Checkadd() -> bool {
-  /*
-   * when there is no add we get the strings pasted below
-   */
+  /* when there is no add we get the strings pasted below */
   FILE *fd = popen(" git status ", "r");
   char *temp = new (nothrow) char[1024];
   if (fd == NULL || temp == NULL)
@@ -422,8 +411,7 @@ auto Checkadd() -> bool {
         tempcmp == "nothing added to commit but untracked files present (use "
                    "\"git add\" to track)\n" ||
         tempcmp == "Changes to be committed\n") {
-      /*if string match is found we return false cus we are checking for
-       * no add
+      /* if string match is found we return false cus we are checking for no add
        */
       fclose(fd);
       return false;
@@ -437,6 +425,7 @@ auto createOnlineRepo() -> void {
   /* variables we need */
   string token;
   char *crepo = new (nothrow) char[500];
+
   if (crepo == NULL)
     errorT2("Program Crashed...\n");
   char confirm;

@@ -13,12 +13,12 @@ using std::string, std::stringstream;
 
 /* [ name ]: setProgect -l [cpp/c] -C [make/cmake] -std [11/14/17/20/2a/2x]
  * [ purpose ] : create a simple c/c++ project
- * [ status ] : ready
+ * [ status ] : complete
  * [ sample ] : setProgect -l [cpp/c] -C [make/cmake] -std [11/14/17/20/2a/2x]
  */
 
-// engine will take the argc and argv and parse them ?? into what ?
-// parse them and call the respective functions
+// engine will take the argc and argv and parse them.
+// parse => check flags and call the respective functions
 
 struct Engine {
 private:
@@ -32,23 +32,35 @@ private:
 public:
   Engine(char **args, int argc) : Args(args), Argc(argc){};
   // functions to use
-  void ERR(std::string str, int status = 1) {
+  void ERR(string str, int status = 1) {
     fmt::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
     exit(status);
-  }
+  } // ERR
+
+  void check_next(const char *check, const char *format) {
+    if (check != NULL) {
+      if (check[0] != '-') {
+        return;
+      }
+    }
+    string err_ = string(format);
+    ERR(err_);
+  } // check_next
+
   FILE *getFile(const char *file) {
     FILE *tempfile = fopen(file, "w+");
     assert(tempfile != NULL);
     return tempfile;
-  };
+  }; // geFile
 
-  void createFile(const char *str, const char *nameOfFile) {
+  void createFile(const char *str, const char *nameOfFile, int free = 1) {
     assert(str != NULL);
     FILE *makefile = getFile(nameOfFile);
     fwrite(str, 1, strlen(str), makefile);
     fclose(makefile);
-    delete[] str;
-  };
+    if (free)
+      delete[] str;
+  }; // createFile
 
   void make() {
     char *str = new char[500];
@@ -70,7 +82,7 @@ public:
             (language == "c" ? "gcc" : "g++"), filename.c_str(),
             (language == "c" ? "c" : "c++"), standard.c_str());
     createFile(str, "Makefile");
-  };
+  }; // Make
 
   void cmake() {
     char *str = new char[500];
@@ -105,7 +117,7 @@ public:
             "\t@rm -rf bin build 2>/dev/null\n",
             filename.c_str());
     createFile(makestr, "Makefile");
-  }
+  } // Cmake
 
   // parser -l -c -h
   void parse() {
@@ -114,13 +126,12 @@ public:
       if ((strcmp(Args[1], "-h") == 0) || (strcmp(Args[1], "--help") == 0)) {
         printf(
             "%s : create a simple project startup \n"
-            "-h                 output this message\n"
-            "-l [c/cpp]         language of the project*\n"
-            "-c [cmake,make]    compiler Script  ( default: make )\n"
-            "-f [filename]      custom file name ( default: main.[c | cpp] )\n"
-            "-std [standard]    set a standard   ( default: -std=[c2x | "
-            "c++2a] )\n"
-            "\nOnly -l is compulsory\n",
+            "-h                   output this message\n"
+            "-l   [c,cpp]         language of the project*\n"
+            "-c   [cmake,make]    compiler Script  ( default: make )\n"
+            "-f   [filename]      custom file name ( default: main.[c,cpp] )\n"
+            "-std [standard]      set a standard   ( default: -std=c2- )\n\n"
+            "NB: Only -l is compulsory\n",
             program_invocation_name);
 
         exit(0);
@@ -133,22 +144,22 @@ public:
       while (i < Argc) {
         if (strcmp(Args[i], "-l") == 0) {
           ++i;
-          assert(Args[i] != NULL);
+          check_next(Args[i], "-l needs an argument");
           language = string(Args[i]);
           if ((language != "c") && (language != "cpp")) {
             ERR("Yo man, only c or cpp allowed in -l", 1);
           }
         } else if (strcmp(Args[i], "-f") == 0) {
           ++i;
-          assert(Args[i] != NULL);
+          check_next(Args[i], "-f needs an argument");
           filename = string(Args[i]);
         } else if (strcmp(Args[i], "-c") == 0) {
           ++i;
-          assert(Args[i] != NULL);
+          check_next(Args[i], "-c needs an argument");
           compiler = string(Args[i]);
         } else if (strcmp(Args[i], "-std") == 0) {
           ++i;
-          assert(Args[i] != NULL);
+          check_next(Args[i], "-std needs an argument");
           standard = string(Args[i]);
         }
         i++;
@@ -162,9 +173,8 @@ public:
           1);
     }
     // checking standard
-    if (standard != "11" || standard != "14" || standard != "17" ||
-        standard != "20" || standard != "99" || standard != "2x" ||
-        standard != "2a") {
+    if (standard != "11" || standard != "17" || standard != "20" ||
+        standard != "99" || standard != "2x" || standard != "2a") {
       if (language == "c") {
         standard = "2x";
       } else {
@@ -208,8 +218,9 @@ public:
            language.c_str(), filename.c_str(), compiler.c_str(),
            standard.c_str());
     exit(0);
-  }
-};
+  } // void Parse
+
+}; // Engine
 
 int main(int argc, char **argv) {
   Engine *e = new Engine(argv, argc);

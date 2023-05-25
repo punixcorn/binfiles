@@ -104,32 +104,16 @@ int main(int argc, char **argv) {
 
   if (strstr(buffer, "HDMI1 connected") != NULL) {
     printf("%s HDMI connection found \n", ok);
+    memset(buffer, 0, strlen(buffer));
     sprintf(buffer,
             "xrandr --output %s --primary --mode 1920x1080 --rotate normal "
             "--output HDMI1 --mode %s --rotate normal --right-of %s",
             monitor, size, monitor);
-    /*
-     char *command[15] = {
-        "xrandr",    "--output",        monitor,    "--primary",  "--mode",
-        "1920x1080", "--rotate normal", "--output", "HDMI1",      "--mode",
-        size,        "--rotate",        "normal",   "--right-of", monitor};
-    int parent = getpid();
-    int status = 0;
-    fork();
-    if (parent != getpid()) { // we are in child
-      status = execv("xrandr", command);
-      exit(0);
-    }
-    if (status == -1) {
-      fprintf(stderr, "%s Failed to set Display \n", err);
-    } else {
-      printf("%s Hdmi has been setup sucessfully \n", ok);
-    }*/
     system(buffer);
     printf("%s Hdmi has been setup sucessfully \n", ok);
     if (argc == 1) {
       printf("command:\n%s\n", buffer);
-      printf("%s Right HDMI1 left\n", monitor);
+      printf("%s %s Right HDMI1 left\n", ok, monitor);
     }
     free(buffer);
     exit(0);

@@ -1,6 +1,6 @@
 CC=gcc
 CCP=g++
-F1= -std=gnu2x
+j1= -std=gnu2x
 F2= -std=c2x 
 D1= --all-warnings -g
 D2=
@@ -35,6 +35,12 @@ copy: cli
 run: cli 
 	@echo "======================================================"
 	@./cli
+
+clang-c:
+	printf "CompileFlags:\n\tAdd: [ -std=gnu2x ]\n" > .clangd
+
+clang-cpp:
+	printf "CompileFlags:\n\tAdd: [ -std=gnu++2a ]\n" > .clangd
 
 clean:
 	@echo "cleaning..."

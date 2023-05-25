@@ -4,4 +4,5 @@ Aegukga
 .src/cli
 .src/obj.o
 .ccls-cache/ 
+.src/.clangd
 
