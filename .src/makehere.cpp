@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <cctype>
 #include <cerrno>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <fmt/core.h>
@@ -25,6 +26,7 @@ struct Engine
   private:
     char** Args;
     int Argc;
+    bool skipfile{ false };
     string language;
     string filename;
     string compiler;
@@ -41,17 +43,35 @@ struct Engine
         exit(status);
     } // ERR
 
-    void check_next(const char* check, const char* format)
+    // compares all va_args to str and returns true if one is fouund
+    bool compareStrings(const char* str, int count, ...)
     {
-        if (check != NULL) {
-            if (check[0] != '-') {
+        va_list list;
+        va_start(list, count);
+        if (!count)
+            return false;
+        while (count > 0) {
+            if ((strcmp(str, va_arg(list, char*)) == 0)) {
+                return true;
+            }
+            count--;
+        }
+        return false;
+    };
+
+    // checks if the str has a '-' in it
+    void check_next(const char* str, const char* err_message)
+    {
+        if (str != NULL) {
+            if (str[0] != '-') {
                 return;
             }
         }
-        string err_ = string(format);
+        string err_ = string(err_message);
         ERR(err_);
     } // check_next
 
+    // creates a file and returns a pointer to it
     FILE* getFile(const char* file)
     {
         FILE* tempfile = fopen(file, "w+");
@@ -59,6 +79,7 @@ struct Engine
         return tempfile;
     }; // geFile
 
+    // create a file and puts in the strings into the file
     void createFile(const char* str, const char* nameOfFile, int free = 1)
     {
         assert(str != NULL);
@@ -137,19 +158,26 @@ struct Engine
     {
         switch (Argc) {
             case 2:
-                if ((strcmp(Args[1], "-h") == 0) ||
-                    (strcmp(Args[1], "--help") == 0)) {
-                    printf("%s : create a simple project startup \n"
-                           "-h                   output this message\n"
-                           "-l   [c,cpp]         language of the project*\n"
-                           "-c   [cmake,make]    compiler Script  ( default: "
-                           "make )\n"
-                           "-f   [filename]      custom file name ( default: "
-                           "main.[c,cpp] )\n"
-                           "-std [standard]      set a standard   ( default: "
-                           "-std=c2- )\n\n"
-                           "NB: Only -l is compulsory\n",
-                           program_invocation_name);
+                if (compareStrings(Args[1], 2, "--help", "-h")) {
+                    printf(
+                      "%s : create a simple project startup \n"
+                      "-h    --help                       output this message\n"
+                      "-l    --language   [c,cpp]         language of the "
+                      "project*\n"
+                      "-c    --complier   [cmake,make]    compiler Script  ( "
+                      "default: "
+                      "make )\n"
+                      "-f    --filename   [filename]      custom file name ( "
+                      "default: "
+                      "main.[c,cpp] )\n"
+                      "-std  --standard   [standard]      set a standard   ( "
+                      "default: "
+                      "-std=c2- )\n"
+                      "-s    --skip                       skip creating a "
+                      "source "
+                      "file\n"
+                      "NB: Only -l is compulsory\n",
+                      program_invocation_name);
 
                     exit(0);
                 } else {
@@ -159,25 +187,31 @@ struct Engine
             default:
                 int i{ 1 };
                 while (i < Argc) {
-                    if (strcmp(Args[i], "-l") == 0) {
+                    if (compareStrings(Args[i], 2, "--language", "-l") == 1) {
                         ++i;
-                        check_next(Args[i], "-l needs an argument");
+                        check_next(Args[i],
+                                   "-l / --language needs an argument");
                         language = string(Args[i]);
                         if ((language != "c") && (language != "cpp")) {
-                            ERR("Yo man, only c or cpp allowed in -l", 1);
+                            ERR(
+                              "Yo man, only c or cpp allowed in -l/--language",
+                              1);
                         }
-                    } else if (strcmp(Args[i], "-f") == 0) {
+                    } else if (compareStrings(Args[i], 2, "--filename", "-f")) {
                         ++i;
                         check_next(Args[i], "-f needs an argument");
                         filename = string(Args[i]);
-                    } else if (strcmp(Args[i], "-c") == 0) {
+                    } else if (compareStrings(Args[i], 2, "--compiler", "-c")) {
                         ++i;
                         check_next(Args[i], "-c needs an argument");
                         compiler = string(Args[i]);
-                    } else if (strcmp(Args[i], "-std") == 0) {
+                    } else if (compareStrings(
+                                 Args[i], 2, "-std", "--standard")) {
                         ++i;
                         check_next(Args[i], "-std needs an argument");
                         standard = string(Args[i]);
+                    } else if (compareStrings(Args[i], 2, "-s", "--skip")) {
+                        skipfile = true;
                     }
                     i++;
                 };
@@ -207,6 +241,7 @@ struct Engine
                 filename = "main.cpp";
             }
         }
+
         // creating the file
         // checking if  c lang is used with a cpp file
         if ((language == "c") && (filename.find(".c") == string::npos)) {
@@ -221,7 +256,8 @@ struct Engine
         }
         string start =
           "#include<stdio.h>\nint main(int argc,char ** argv){\n}\n";
-        createFile(start.c_str(), filename.c_str());
+        if (!skipfile)
+            createFile(start.c_str(), filename.c_str());
         // creating the compiler script
         if (compiler.size() == 0) {
             compiler = "make";
@@ -237,7 +273,7 @@ struct Engine
                "compiler script : %s\n"
                "standard        : %s\n",
                language.c_str(),
-               filename.c_str(),
+               skipfile ? "--skipped--" : filename.c_str(),
                compiler.c_str(),
                standard.c_str());
         exit(0);
