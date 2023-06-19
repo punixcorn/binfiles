@@ -4,12 +4,11 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include <fmt/core.h>
-#include <fmt/format.h>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
 using std::string, std::stringstream;
 
 /* [ name ]: setProgect -l [cpp/c] -C [make/cmake] -std [11/14/17/20/2a/2x]
@@ -21,31 +20,27 @@ using std::string, std::stringstream;
 // engine will take the argc and argv and parse them.
 // parse => check flags and call the respective functions
 
-struct Engine
-{
-  private:
+struct Engine {
+   private:
     char** Args;
     int Argc;
-    bool skipfile{ false };
+    bool skipfile{false};
     string language;
     string filename;
     string compiler;
     string standard;
 
-  public:
-    Engine(char** args, int argc)
-      : Args(args)
-      , Argc(argc){};
+   public:
+    Engine(char** args, int argc) : Args(args), Argc(argc){};
     // functions to use
-    void ERR(string str, int status = 1)
-    {
-        fmt::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
+    void ERR(string str, int status = 1) {
+        fprintf(stderr, "%s : [ERR] %s\n", program_invocation_name,
+                str.c_str());
         exit(status);
-    } // ERR
+    }  // ERR
 
     // compares all va_args to str and returns true if one is fouund
-    bool compareStrings(const char* str, int count, ...)
-    {
+    bool compareStrings(const char* str, int count, ...) {
         va_list list;
         va_start(list, count);
         if (!count)
@@ -60,8 +55,7 @@ struct Engine
     };
 
     // checks if the str has a '-' in it
-    void check_next(const char* str, const char* err_message)
-    {
+    void check_next(const char* str, const char* err_message) {
         if (str != NULL) {
             if (str[0] != '-') {
                 return;
@@ -69,29 +63,36 @@ struct Engine
         }
         string err_ = string(err_message);
         ERR(err_);
-    } // check_next
+    }  // check_next
 
     // creates a file and returns a pointer to it
-    FILE* getFile(const char* file)
-    {
+    FILE* getFile(const char* file) {
         FILE* tempfile = fopen(file, "w+");
         assert(tempfile != NULL);
         return tempfile;
-    }; // geFile
+    };  // geFile
 
     // create a file and puts in the strings into the file
-    void createFile(const char* str, const char* nameOfFile, int free = 1)
-    {
+    void createFile(const char* str, const char* nameOfFile, int free = 1) {
         assert(str != NULL);
         FILE* makefile = getFile(nameOfFile);
         fwrite(str, 1, strlen(str), makefile);
         fclose(makefile);
         if (free)
             delete[] str;
-    }; // createFile
+    };  // createFile
 
-    void make()
-    {
+    void clangd() {
+        char* str = new char[500];
+        sprintf(str,
+                "CompileFlags:\n"
+                "\tAdd: [ -std=%s ]\n",
+                (language == "c" ? "gnu2x" : "gnu++2a"));
+
+        createFile(str, ".clangd");
+    };  // clangd
+
+    void make() {
         char* str = new char[500];
         sprintf(str,
                 "CC=%3s\n"
@@ -108,15 +109,12 @@ struct Engine
                 "clean:\n"
                 "\t@touch main.o main\n"
                 "\t@rm main.o main\n",
-                (language == "c" ? "gcc" : "g++"),
-                filename.c_str(),
-                (language == "c" ? "c" : "c++"),
-                standard.c_str());
+                (language == "c" ? "gcc" : "g++"), filename.c_str(),
+                (language == "c" ? "c" : "c++"), standard.c_str());
         createFile(str, "Makefile");
-    }; // Make
+    };  // Make
 
-    void cmake()
-    {
+    void cmake() {
         char* str = new char[500];
         if (language == "c") {
             language = "C";
@@ -130,9 +128,7 @@ struct Engine
                 "set(CMAKE_%s_STANDARD %s)\n"
                 "set(CMAKE_%s_STANDARD_REQUIRED true)\n"
                 "set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)\n",
-                filename.c_str(),
-                language.c_str(),
-                standard.c_str(),
+                filename.c_str(), language.c_str(), standard.c_str(),
                 language.c_str());
         createFile(str, "CMakeLists.txt");
         char* makestr = new char[500];
@@ -151,33 +147,33 @@ struct Engine
                 "\t@rm -rf bin build 2>/dev/null\n",
                 filename.c_str());
         createFile(makestr, "Makefile");
-    } // Cmake
+    }  // Cmake
 
     // parser -l -c -h
-    void parse()
-    {
+    void parse() {
         switch (Argc) {
             case 2:
                 if (compareStrings(Args[1], 2, "--help", "-h")) {
                     printf(
-                      "%s : create a simple project startup \n"
-                      "-h    --help                       output this message\n"
-                      "-l    --language   [c,cpp]         language of the "
-                      "project*\n"
-                      "-c    --complier   [cmake,make]    compiler Script  ( "
-                      "default: "
-                      "make )\n"
-                      "-f    --filename   [filename]      custom file name ( "
-                      "default: "
-                      "main.[c,cpp] )\n"
-                      "-std  --standard   [standard]      set a standard   ( "
-                      "default: "
-                      "-std=c2- )\n"
-                      "-s    --skip                       skip creating a "
-                      "source "
-                      "file\n"
-                      "NB: Only -l is compulsory\n",
-                      program_invocation_name);
+                        "%s : create a simple project startup \n"
+                        "-h    --help                       output this "
+                        "message\n"
+                        "-l    --language   [c,cpp]         language of the "
+                        "project*\n"
+                        "-c    --complier   [cmake,make]    compiler Script  ( "
+                        "default: "
+                        "make )\n"
+                        "-f    --filename   [filename]      custom file name ( "
+                        "default: "
+                        "main.[c,cpp] )\n"
+                        "-std  --standard   [standard]      set a standard   ( "
+                        "default: "
+                        "-std=c2- )\n"
+                        "-s    --skip                       skip creating a "
+                        "source "
+                        "file\n"
+                        "NB: Only -l is compulsory\n",
+                        program_invocation_name);
 
                     exit(0);
                 } else {
@@ -185,7 +181,7 @@ struct Engine
                 }
                 break;
             default:
-                int i{ 1 };
+                int i{1};
                 while (i < Argc) {
                     if (compareStrings(Args[i], 2, "--language", "-l") == 1) {
                         ++i;
@@ -193,9 +189,9 @@ struct Engine
                                    "-l / --language needs an argument");
                         language = string(Args[i]);
                         if ((language != "c") && (language != "cpp")) {
-                            ERR(
-                              "Yo man, only c or cpp allowed in -l/--language",
-                              1);
+                            ERR("Yo man, only c or cpp allowed in "
+                                "-l/--language",
+                                1);
                         }
                     } else if (compareStrings(Args[i], 2, "--filename", "-f")) {
                         ++i;
@@ -205,8 +201,8 @@ struct Engine
                         ++i;
                         check_next(Args[i], "-c needs an argument");
                         compiler = string(Args[i]);
-                    } else if (compareStrings(
-                                 Args[i], 2, "-std", "--standard")) {
+                    } else if (compareStrings(Args[i], 2, "-std",
+                                              "--standard")) {
                         ++i;
                         check_next(Args[i], "-std needs an argument");
                         standard = string(Args[i]);
@@ -245,9 +241,9 @@ struct Engine
         // creating the file
         // checking if  c lang is used with a cpp file
         if ((language == "c") && (filename.find(".c") == string::npos)) {
-            fprintf(
-              stderr,
-              "Warning: language selected is C and Filename is not a C file\n");
+            fprintf(stderr,
+                    "Warning: language selected is C and Filename is not a C "
+                    "file\n");
         } else if ((language == "cpp") &&
                    (filename.find(".cpp") == string::npos)) {
             fprintf(stderr,
@@ -255,7 +251,7 @@ struct Engine
                     "C++ file\n");
         }
         string start =
-          "#include<stdio.h>\nint main(int argc,char ** argv){\n}\n";
+            "#include<stdio.h>\nint main(int argc,char ** argv){\n}\n";
         if (!skipfile)
             createFile(start.c_str(), filename.c_str());
         // creating the compiler script
@@ -267,23 +263,24 @@ struct Engine
         } else if (compiler == "cmake") {
             cmake();
         }
-        printf("Created a project main\n"
-               "language        : %s\n"
-               "filename        : %s\n"
-               "compiler script : %s\n"
-               "standard        : %s\n",
-               language.c_str(),
-               skipfile ? "--skipped--" : filename.c_str(),
-               compiler.c_str(),
-               standard.c_str());
+
+        // setting up clangd
+        clangd();
+
+        printf(
+            "Created a project\n"
+            "language        : %s\n"
+            "filename        : %s\n"
+            "compiler script : %s\n"
+            "standard        : %s\n",
+            language.c_str(), skipfile ? "--skipped--" : filename.c_str(),
+            compiler.c_str(), standard.c_str());
         exit(0);
-    } // void Parse
+    }  // void Parse
 
-}; // Engine
+};  // Engine
 
-int
-main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     Engine* e = new Engine(argv, argc);
     if (argc == 1) {
         e->ERR("no arguments passed\ntry -h for more info\n", 1);

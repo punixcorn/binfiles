@@ -1,7 +1,7 @@
 CC=gcc
 CC_=g++
 CFLAGS= -std=gnu2x --all-warnings -g -ggdb
-CPPFLAGS= -std=gnu++2b --all-warnings -ggdb -lfmt
+CPPFLAGS= -std=gnu++2b --all-warnings -ggdb 
 FILE=
 
 c: cmain.o 
