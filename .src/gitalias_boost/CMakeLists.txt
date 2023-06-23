@@ -5,7 +5,7 @@ add_executable(${PROJECT_NAME} Main.cxx)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
-find_library(fmt boost_system boost_execption boost_program_options REQUIRED)
+find_library(boost_system boost_execption boost_program_options REQUIRED)
 target_link_libraries(
   ${PROJECT_NAME} PRIVATE boost_program_options boost_system boost_exception
                           -static)
