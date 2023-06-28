@@ -51,7 +51,7 @@ void createdir(char* dname, mode_t mode) {
 int main(int argc, char** argv) {
     char* pdir = (char*)malloc(sizeof(char) * 100);
     int check = 0, i = 1, ddebug = {0};
-    char command[600];
+    char* command = malloc(1000);
 
     if (argc < 2 || (pdir == NULL)) {
         info("Invalid arguments passed", -1);
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
             check = 1;
             ++i;
         }
-        if (strncmp(*(argv + i), "--debug", strlen("--debug")) == 0) {
+        if (strcmp(*(argv + i), "--debug")) {
             ddebug = 1;
             ++i;
         }

@@ -3,8 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 #define null NULL
+#ifndef bool
+#define bool u_int8_t
+#define true 1
+#define false 0
+#endif
+#define err "\e[31m[ ERR ]\e[0m"
+#define ok "\e[31m[ OK ]\e[0m"
 
 /* [ file name ] : setHdmi
  * [ file purpose ] : a wrapper xrandr for setting up hdmi
@@ -14,6 +22,19 @@
  */
 /*will add options to pick if mainscreen position relative to others */
 /* will add error handling later */
+
+typedef enum {
+    small,
+    big,
+} op_size;
+
+typedef struct {
+    char* monitor;
+    char* size;
+    bool show;
+} info;
+
+info Io;
 
 char* getbuffer() {
     FILE* fd = popen("xrandr", "r");
@@ -27,74 +48,121 @@ char* getbuffer() {
     return buffer;
 }
 
-int main(int argc, char** argv) {
-    char* monitor = null;
-    char* size = "1920x1080";
-    char* err = "\e[31m[ ERR ]\e[0m";
-    char* ok = "\e[31m[ OK ]\e[0m";
+[[nodiscard("check if the str starts with -")]] bool isNotOption(char* str) {
+    if (str != null && str[0] != '-')
+        return true;
+    return false;
+};
 
-    switch (argc) {
-        case 1:
-            argc = 0;  // using argc , cus free varibale to use
+/* 1 => exit with err
+ * 2 => exit with help message */
+void Exit(char* program_name, u_int8_t type) {
+    if (type == 1) {
+        fprintf(stderr,
+                "Invalid arguments passed\ntry %s --help for more information",
+                program_name);
+        exit(1);
+    } else if (type == 2) {
+        printf(
+            "%s: Used to setup dual displays\n"
+            "-h                        print this help message\n"
+            "-m [ main monitor name ]  default is eDP1\n"
+            "-s --show                 show the monitors available\n"
+            "--off                     turn of HDMI setting\n",
+            program_name);
+        exit(0);
+    }
+}
+
+void setup(const int argc, char** argv, int* index, const op_size op) {
+    char temp;
+    if (op == small)
+        temp = argv[*index][1];
+    else if (op == big)
+        temp = argv[*index][2];
+
+    char* offbuffer = getbuffer();
+    switch (temp) {
+        case 'm':
+            *index += 1;
+            if (!isNotOption(argv[*index]))
+                Exit(argv[0], 1);
+
+            Io.monitor = argv[*index];
+
+            if (Io.monitor == NULL) {
+                printf("Could not read monitor name\n");
+                exit(1);
+            }
             break;
-        case 2:
-            if (strncmp(argv[1], "-h", 2) == 0 ||
-                strncmp(argv[1], "--help", strlen("--help")) == 0) {
-                printf(
-                    "%s: Used to setup dual displays\n"
-                    "-h                        print this help message\n"
-                    "-m [ main monitor name ]  default is eDP1\n"
-                    "-s --show                 show the monitors available\n"
-                    "--off                     turn of HDMI setting\n",
-                    argv[0]);
-            } else if (strncmp(argv[1], "-s", 2) == 0 ||
-                       strncmp(argv[1], "--show", strlen("--show")) == 0) {
-                argc = 1;
-                break;
-            } else if (strncmp(argv[1], "-off", 3) == 0 ||
-                       strncmp(argv[1], "--off", strlen("--off")) == 0) {
-                char* offbuffer = getbuffer();
-                if (strstr(offbuffer,
-                           "HDMI1 disconnected (normal left inverted right x "
-                           "axis y axis)") != NULL) {
-                    fprintf(stderr,
-                            "%s no HDMI setup found\nTry running \"xrandr "
-                            "--output HDMI1 --off\"\n",
-                            err);
-                } else {
-                    system("xrandr --output HDMI1 --off");
-                    printf("%s HDMI settings off\n", ok);
+        case 's':
+            if (argv[*index][3] == 'i') {
+                *index += 1;
+                if (!isNotOption(argv[*index]))
+                    Exit(argv[0], 1);
+
+                Io.size = argv[*index];
+
+                if (Io.size == NULL) {
+                    printf("Could not read display size\n");
+                    exit(1);
                 }
-                exit(0);
+            }  // size
+
+            if (argv[*index][3] == 'h') {
+                Io.show = true;
+            }  // show
+
+            break;
+        case 'h':
+            Exit(argv[0], 2);
+            break;
+        case 'o':
+            if (strstr(offbuffer,
+                       "HDMI1 disconnected (normal left inverted right x "
+                       "axis y axis)") != NULL) {
+                fprintf(stderr, err
+                        " no HDMI setup found\nTry running"
+                        "\"xrandr --output HDMI1 --off\"\n");
             } else {
-                fprintf(stderr,
-                        "Error: Invaild arguments passed\n\tTry -h for more "
-                        "info\n");
+                system("xrandr --output HDMI1 --off");
+                printf(ok " HDMI settings off\n");
             }
             exit(0);
             break;
-        case 3:
-            argc = 0;
-            if (strcmp(*(argv + 1), "-m") == 0) {
-                monitor = *(argv + 2);
-                if (monitor == NULL) {
-                    printf("Could not read monitor name\n");
-                    exit(1);
-                }
-            }
-            break;
         default:
-            fprintf(stderr, "Invalid arguments passed\n");
-            exit(1);
+            Exit(argv[0], 1);
             break;
+    }
+}
+
+int main(int argc, char** argv) {
+    Io.monitor = null;
+    Io.show = false;
+    Io.size = null;
+
+    int i = {1};
+
+    while (i < argc) {
+        int first_dash = {0};
+        if ('-' == argv[i][0])
+            first_dash += 1;
+        if (first_dash && '-' == argv[i][1]) {
+            setup(argc, argv, &i, big);
+        } else if (first_dash) {
+            setup(argc, argv, &i, small);
+        }
+        i++;
     }
 
     char* buffer = getbuffer();
-    if (argc == 1)
+    if (Io.show)
         printf("======= buffer =======\n%s======= buffer =======\n", buffer);
-    monitor = (monitor == NULL ? (char*)"eDP1" : monitor);
 
-    if (strstr(buffer, monitor) != NULL) {
+    Io.monitor = (Io.monitor == NULL ? (char*)"eDP1" : Io.monitor);
+
+    Io.size = (Io.size == NULL ? (char*)"1920x1080" : Io.size);
+    if (strstr(buffer, Io.monitor) != NULL) {
         fprintf(stdout, "%s Main Display found \n", ok);
     } else {
         fprintf(stderr,
@@ -108,18 +176,18 @@ int main(int argc, char** argv) {
         sprintf(buffer,
                 "xrandr --output %s --primary --mode 1920x1080 --rotate normal "
                 "--output HDMI1 --mode %s --rotate normal --right-of %s",
-                monitor, size, monitor);
+                Io.monitor, Io.size, Io.monitor);
         system(buffer);
-        printf("%s Hdmi has been setup sucessfully \n", ok);
+        printf(ok " Hdmi has been setup sucessfully \n");
         if (argc == 1) {
             printf("command:\n%s\n", buffer);
-            printf("%s %s Right HDMI1 left\n", ok, monitor);
+            printf(ok " %s Right HDMI1 left\n", Io.monitor);
         }
         free(buffer);
         exit(0);
     } else {
         free(buffer);
-        fprintf(stderr, "%s Could not find HDMI connection \n", err);
+        fprintf(stderr, err " Could not find HDMI connection \n");
         exit(1);
     }
 }
