@@ -14,11 +14,11 @@ char command[120];
 char temp[100];  // input puts into command
 
 void mountsd(char* str1, char* str2, char* exe_name) {
-    sprintf(command, "sudo mount /dev/");
+    snprintf(command, 119, "sudo mount -o umask=000 /dev/");
     if (*(str1 + 0) == '/' && *(str2 + 0) != '/') {
-        sprintf(temp, "%s %s", str2, str1);
+        snprintf(temp, 99, "%s %s", str2, str1);
     } else if (*(str1 + 0) != '/' && *(str2 + 0) == '/') {
-        sprintf(temp, "%s %s", str1, str2);
+        snprintf(temp, 99, "%s %s", str1, str2);
     } else {
         fprintf(stderr,
                 "%s : error, invaild arguments passed...\n"
@@ -39,12 +39,11 @@ int main(int argc, char** argv) {
         if (strcmp("-h", *(argv + 1)) == 0) {
             fprintf(stdout,
                     "Usage : %s [ options... ]\n"
-                    "[  <device> <directory> ]   mount a device on "
+                    "<device> <directory>   mount a device on "
                     "directory \n"
                     "-h                     print this message \n"
                     "-lsblk                 show block devices "
-                    "before running "
-                    "command\n"
+                    "before running command\n"
                     "Example:\n\t%s sda1 /mnt\n",
                     *(argv), *(argv));
             exit(0);
