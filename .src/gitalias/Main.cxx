@@ -49,12 +49,11 @@ struct Trips {
 /* ============== function declarations ================*/
 /* append into subcommand [ ret: void ]*/
 void Isubcommand(const string_view& s1, const string_view& s2);
-/* prints error message e with help message and kills the program [ ret: void
- * ]*/
+/* prints error message e with help message and kills program [ret: void]*/
 auto errorT1(const string_view& e) -> void;
 /* prints error message e and kills the program  [ ret: void ]*/
 auto errorT2(const string_view& e) -> void;
-/* check is something exists at place [ ret: bool ]*/
+/* check is thing exists at place [ ret: bool ]*/
 auto getdir(const string& place, const string_view& thing) -> bool;
 /* checks if you have a git repo init [ ret: bool ]*/
 auto getGitInfo() -> bool;
@@ -523,10 +522,10 @@ auto createOnlineRepo() -> void {
 }
 
 auto run(bool v) -> void {
-    if (subcommand.length() > 0)
+    if (subcommand.length())
         command += subcommand;
     if (v) {
-        cout << "Gitalias VERSION 2.4.9\nCommand generated: " << command
+        cout << "Gitalias VERSION 2.5.0\nCommand generated: " << command
              << endl;
     }
     system(command.c_str());
@@ -579,10 +578,10 @@ auto parse(Trips* t) -> void {
     if (t->commit) {
         /*check g trip */
         if (strstr(subcommand.c_str(), "commit") != null)
-            errorT2("Err: used commit in --git and -c / --commit together");
+            errorT2("Err: used commit in --git and --commit together");
         /* if not message trip  */
         if (!t->message) {
-            messagebox = " -m 'commit made' ";
+            messagebox = " -m 'made some changes' ";
         }
         /* if not add trip */
         if (!t->add) {

@@ -1,17 +1,13 @@
-For error formats : 
+For error formats :
 
-if help:
+### if help:
 Usage : name [ options ... ]
--h         print this message 
+-h         print this message
 -o         do something
 
-if invalid argument:
+### if invalid argument:
 exe-name : error, invalid arguments passed...
-try -h for help 
+try -h for help
 
-if other errors:
-exe-name : error type, reason & help 
-
-
-c++ format = c++20 -> 2x
-c format = c11 -> c2x 
+### if other errors:
+exe-name : error type, reason & help

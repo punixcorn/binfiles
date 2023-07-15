@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
         char* temp = malloc(100);
         memset(temp, 0, 100);
         // mkdir -p is better
-        sprintf(temp, "mkdir -p %s", argv[check]);
+        snprintf(temp, 100, "mkdir -p %s", argv[check]);
         system(temp);
         /*  createdir(*(argv + (check)), 0710); */
     }

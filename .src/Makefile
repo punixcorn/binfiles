@@ -1,6 +1,6 @@
 CC=gcc
 CC_=g++
-CFLAGS= -std=gnu2x --all-warnings -g -ggdb
+CFLAGS= -std=gnu2x --all-warnings -ggdb
 CPPFLAGS= -std=gnu++2b --all-warnings -ggdb 
 FILE=
 DFLAGS=

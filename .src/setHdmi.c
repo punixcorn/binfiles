@@ -5,7 +5,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifndef null
 #define null NULL
+#endif
 #ifndef bool
 #define bool u_int8_t
 #define true 1
@@ -24,8 +26,8 @@
 /* will add error handling later */
 
 typedef enum {
-    small,
-    big,
+    small,  // -h
+    big,    // --help
 } op_size;
 
 typedef struct {
@@ -67,7 +69,8 @@ void Exit(char* program_name, u_int8_t type) {
             "%s: Used to setup dual displays\n"
             "-h                        print this help message\n"
             "-m [ main monitor name ]  default is eDP1\n"
-            "-s --show                 show the monitors available\n"
+            "--size                 specify a size[ default: 1920x1080 ]\n"
+            "--show                 show the monitors available\n"
             "--off                     turn of HDMI setting\n",
             program_name);
         exit(0);
@@ -143,6 +146,7 @@ int main(int argc, char** argv) {
 
     int i = {1};
 
+    // parse argv
     while (i < argc) {
         int first_dash = {0};
         if ('-' == argv[i][0])
