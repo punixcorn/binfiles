@@ -11,10 +11,10 @@
 
 using std::string, std::stringstream;
 
-/* [ name ]: setProgect -l [cpp/c] -C [make/cmake] -std [11/14/17/20/2a/2x]
- * [ purpose ] : create a simple c/c++ project
- * [ status ] : complete
- * [ sample ] : setProgect -l [cpp/c] -C [make/cmake] -std [11/14/17/20/2a/2x]
+/* [ name ]: makehere
+ * [ purpose ] : create a simple c/c++ project [ status ] : complete
+ * [ sample ] : makehere -l [cpp/c] -C [make/cmake] -std [11/14/17/20/2a/2x] -f
+ * <filename>
  */
 
 // engine will take the argc and argv and parse them.
@@ -149,7 +149,7 @@ struct Engine {
         createFile(makestr, "Makefile");
     }  // Cmake
 
-    // parser -l -c -h
+    // parser -l -c -h -std -f -s
     void parse() {
         switch (Argc) {
             case 2:
@@ -281,10 +281,10 @@ struct Engine {
 };  // Engine
 
 int main(int argc, char** argv) {
-    Engine* e = new Engine(argv, argc);
+    Engine e(argv, argc);
     if (argc == 1) {
-        e->ERR("no arguments passed\ntry -h for more info\n", 1);
+        e.ERR("no arguments passed\ntry -h for more info\n", 1);
     }
-    e->parse();
+    e.parse();
     return 0;
 }
