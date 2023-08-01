@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -13,26 +14,30 @@
  * [ sample ] : setHdmi
  * [ sample2 ] : setHdmi -m eDP1
  */
+
 /* will add options to pick if mainscreen position relative to others */
 /* will add error handling later */
 
-/* arg Mainsize */
+/* arg size */
 typedef enum
 {
     small, // eg: -h
     big,   // eg: --help
-} op_Mainsize;
+} arg_size;
 
 typedef struct
 {
-    char *monitor;
-    char *Mainsize;
-    char *Hdmisize;
-    bool show;
+    char *monitor;  // monitor name
+    char *Mainsize; // main monitor size
+    char *Hdmisize; // hdmi monitor size
+    char *place;    // where hdmi monitor should be placed relative to main monitor
+    bool show;      // show more information
 } info;
 
+/* a global info */
 info Io;
 
+/* return what 'xrandr' gives */
 char *getbuffer()
 {
     FILE *fd = popen("xrandr", "r");
@@ -47,7 +52,7 @@ char *getbuffer()
     return buffer;
 }
 
-[[nodiscard("check if the str starts with -")]] bool isNotOption(char *str)
+[[nodiscard("true if char * str starts with -")]] bool isNotOption(char *str)
 {
     if (str != null && str[0] != '-')
         return true;
@@ -67,18 +72,19 @@ void Exit(char *program_name, u_int8_t type)
     else if (type == 2)
     {
         printf("%s: Used to setup dual displays\n"
-               "-h  --help                  print this help message\n"
-               "-m [ main monitor name ]    default is eDP1\n"
-               "--Mainsize                  specify a Main size  [ default: 1920x1080 ]\n"
-               "--Hdmisize                  specify an Hdmi size [ default: 1920x1080 ]\n"
-               "--show                      ouput xrandr\n"
-               "--off                       turn of HDMI Display\n",
+               "--help  -h                      print this help message\n"
+               "-m [monitor name]               default is eDP1\n"
+               "--Mainsize  -M [size]           specify a Main size  [ default: 1920x1080 ]\n"
+               "--Hdmisize  -H [size]           specify an Hdmi size [ default: 1920x1080 ]\n"
+               "--show  -s                      ouput xrandr\n"
+               "--place -p [right/left/up/down] where hmdi monitor should be placed relative to main monitor\n"
+               "--off -o                        turn of HDMI Display\n",
                program_name);
         exit(0);
     }
 }
 
-void setup(const int argc, char **argv, int *index, const op_Mainsize op)
+void setup(const int argc, char **argv, int *index, const arg_size op)
 {
     char temp;
     if (op == small)
@@ -124,7 +130,7 @@ void setup(const int argc, char **argv, int *index, const op_Mainsize op)
 
         if (Io.Hdmisize == NULL)
         {
-            printf("Could not read display Hdmi size\n");
+            printf("Could not read display HDMI size\n");
             exit(1);
         }
         break;
@@ -133,6 +139,19 @@ void setup(const int argc, char **argv, int *index, const op_Mainsize op)
         {
             Io.show = true;
         } // show
+
+        break;
+    case 'p':
+        *index += 1;
+        if (!isNotOption(argv[*index]))
+            Exit(argv[0], 1);
+
+        Io.place = argv[*index];
+        if (Io.place == NULL)
+        {
+            printf("Could not read HDMI display position size\n");
+            exit(1);
+        }
 
         break;
     case 'h':
@@ -192,7 +211,33 @@ int main(int argc, char **argv)
     Io.monitor = (Io.monitor == NULL ? (char *)"eDP1" : Io.monitor);
     Io.Mainsize = (Io.Mainsize == NULL ? (char *)"1920x1080" : Io.Mainsize);
     Io.Hdmisize = (Io.Hdmisize == NULL ? (char *)"1920x1080" : Io.Hdmisize);
-
+    // setting up place
+    if (Io.place != NULL)
+    {
+        char tempChar = Io.place[0];
+        char *tempstring = Io.place;
+        Io.place = nullptr;
+        switch (tempChar)
+        {
+        case 'r':
+            Io.place = "--right-of ";
+            break;
+        case 'l':
+            Io.place = "--left-of ";
+            break;
+        case 'u':
+            Io.place = "--above";
+            break;
+        case 'd':
+            Io.place = "--below ";
+            break;
+        default:
+            printf("\e[31m[ WARNING ] Uknown option %s used in --place defaulting to right\e[0m\n", tempstring);
+            Io.place = "--right-of ";
+            break;
+        }
+    }
+    Io.place = (Io.place == NULL ? (char *)"--right-of" : Io.place);
     if (strstr(buffer, Io.monitor) != NULL)
     {
         fprintf(stdout, "%s Main Display found \n", ok);
@@ -209,8 +254,8 @@ int main(int argc, char **argv)
         memset(buffer, 0, strlen(buffer));
         sprintf(buffer,
                 "xrandr --output %s --primary --mode 1920x1080 --rotate normal "
-                "--output HDMI1 --mode %s --rotate normal --right-of %s",
-                Io.monitor, Io.Mainsize, Io.monitor);
+                "--output HDMI1 --mode %s --rotate normal %s %s",
+                Io.monitor, Io.Mainsize, Io.place, Io.monitor);
         system(buffer);
         printf(ok " Hdmi has been setup sucessfully \n");
         if (argc == 1)
