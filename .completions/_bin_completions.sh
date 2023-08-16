@@ -33,7 +33,7 @@ _msd_completions() {
 }
 
 _setHdmi_completions() {
-	COMPREPLY+=($(compgen -W "-h -m -s --show --off -off --help " "${COMP_WORDS[1]}" 2>/dev/null))
+	COMPREPLY+=($(compgen -W "-h --help -m -M --Mainszie -H --Hdmisize -s --show -p --place -o --off " "${COMP_WORDS[1]}" 2>/dev/null))
 }
 
 complete -F _gitalias_completions gitalias
