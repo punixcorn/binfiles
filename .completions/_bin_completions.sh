@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 # a simple auto completion will work on it later
 
 #COMP_WORDS: an array of all options
