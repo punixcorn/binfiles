@@ -22,7 +22,7 @@ using std::string, std::string_view;
  * [ currnet implemrntation ] : runfile [ filename ] || runfile { automatic :
  * main.c , main.cpp , main.py };
  * [sample] : runfile cpp || runfile main.cpp  || runfile < g++ main.cpp
- * -g -std=c2x -lfmt -o main
+ * -g -std=c2x -o main
  */
 
 /* do one thing and do it well

@@ -23,6 +23,8 @@ or mannually just add the folder to path and source all files in `.completions`
 the **source codes** are located in `.src` `./.completions` holds **bash
 completions** for binaries
 
+to compile them run `makeall.sh` in `.src`
+
 ---
 
 # Documentation

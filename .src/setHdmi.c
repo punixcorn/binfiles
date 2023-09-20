@@ -60,7 +60,8 @@ char *getbuffer()
 };
 
 /* 1 => exit with err
- * 2 => exit with help message */
+   2 => exit with help message
+*/
 
 void Exit(char *program_name, u_int8_t type)
 {
@@ -75,9 +76,9 @@ void Exit(char *program_name, u_int8_t type)
                "--help  -h                      print this help message\n"
                "-m [monitor name]               default is eDP1\n"
                "--Mainsize  -M [size]           specify a Main size  [ default: 1920x1080 ]\n"
-               "--Hdmisize  -H [size]           specify an Hdmi size [ default: 1920x1080 ]\n"
+               "--Hdmisize  -H [size]           specify an HDMI size [ default: 1920x1080 ]\n"
                "--show  -s                      ouput xrandr\n"
-               "--place -p [right/left/up/down] where hmdi monitor should be placed relative to main monitor\n"
+               "--place -p [right/left/up/down] where HDMI monitor should be placed relative to main monitor\n"
                "--off -o                        turn of HDMI Display\n",
                program_name);
         exit(0);
