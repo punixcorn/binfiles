@@ -10,7 +10,7 @@ DIR=$1
 [ ! -d $DIR ] && mkdir $DIR
 
 findexec() {
-	which $1 || {
+	[ -f "/bin/$1" ] || {
 		echo -e "${col2}$1 not found${rs}"
 		exit 1
 	}
@@ -38,7 +38,12 @@ done
 
 make clean 2>/dev/null
 rm tempfile
-
-[ -d gitalias ] && cd gitalias && make || exit 1
+echo "make gitalias? dependencies: boost [Y,n]"
+read ans
+if [ "$ans" = "n" ] || [ "$ans" = "N" ]; then
+	echo "not compiling gitalias"
+else
+	[ -d gitalias ] && cd gitalias && make || exit 1
+fi
 
 echo -e "Done"
