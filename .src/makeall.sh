@@ -38,12 +38,28 @@ done
 
 make clean 2>/dev/null
 rm tempfile
-echo "make gitalias? dependencies: boost [Y,n]"
+
+gitalias_make() {
+	[ -d gitalias ] && cd gitalias && make
+	[ -f ./gitalias/bin/gitalias ] && mv ./gitalias/bin/gitalias ./../gitalias && cd gitalias && make clean || {
+		echo "gitalias binary not found, failed..."
+		exit 1
+	}
+}
+
+echo "make gitalias? dependencies: boost [Y,n] or install boost and make gitalias [i] ?"
 read ans
 if [ "$ans" = "n" ] || [ "$ans" = "N" ]; then
 	echo "not compiling gitalias"
+elif [ "$ans" = "i" ] || [ "$ans" = "I" ]; then
+	extra_packages=""
+	[ ! -f /bin/cmake ] && echo "you need cmake too...." && extra_packages=" cmake"
+	echo "do you want to install boost? "
+	[ -f /bin/apt ] && sudo apt install libboost-all-dev $extra_packages
+	[ -f /bin/pacman ] && sudo pacman -S boost-libs boost $extra_packages
+	gitalias_make
 else
-	[ -d gitalias ] && cd gitalias && make || exit 1
+	gitalias_make
 fi
 
 echo -e "Done"
