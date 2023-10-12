@@ -34,8 +34,7 @@ using std::string, std::vector, std::string_view, std::cout, std::cerr, std::not
 
 /* global varibales -> helps prevents extreme function arguments*/
 /* could use a class and functors */
-string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
-    command = "[[ -f /bin/git || -f /usr/bin/git ]] ";
+string messagebox, addbox, reponame, repodes, subcommand, Resetcommand, command = "[ -f /bin/git ] ";
 bool mode; // for the user request;
 vector<string>(Sreset);
 struct Trips
@@ -106,12 +105,8 @@ int main(int argc, char *argv[])
             "*Reset back to a commit ,eg gitalias -u "
             "[ hard / soft / mixed ] "
             "[ number of commits to reset back ]")("git,g", opt::value<vector<string>>()->multitoken(),
-                                                   "append git commands eg [ gitalias -g \" git ... \" ] for extra "
-                                                   "commands "
-                                                   "append git to it eg: [ ga -G \"add .\" \" git commit -m 'foo' \" "
-                                                   "... ] "
-                                                   "]")("Grab,G", opt::value<string>(),
-                                                        "grab a specific folder from a github repo");
+                                                   "append git commands [ gitalias -g \" git ... \" ]")(
+            "Grab,G", opt::value<string>(), "grab a specific folder from a github repo");
 
         opt::variables_map args;
         opt::store(opt::command_line_parser(argc, argv)
@@ -371,10 +366,20 @@ int main(int argc, char *argv[])
             string grabstr("svn export ");
             grabstr.append(arg("Grab", string));
             int initLenght = grabstr.length();
-            // first checks for "tree/main"
+
+            // first checks for a folder:
+            //  1: checks for "tree/main"
             boost::algorithm::replace_all(grabstr, "tree/main", "trunk");
-            // if not found, then your most likely exporting a branch
+            // 2: if not found, then your most likely exporting a branch
             boost::algorithm::replace_all(grabstr, "tree", "branches");
+
+            // second checks for a file:
+            //  1: checks for /blob/main
+            boost::algorithm::replace_all(grabstr, "blob/main", "trunk");
+            // 2: checks for /blob/master
+            boost::algorithm::replace_all(grabstr, "blob/master", "trunk");
+
+            // checks if no changes were made, then it could not edit the string
             if (grabstr.length() == initLenght)
                 errorT2("could not resolve github link used\n");
             Isubcommand(" && ", grabstr);
@@ -580,7 +585,7 @@ auto run(bool v) -> void
         command += subcommand;
     if (v)
     {
-        cout << "Gitalias VERSION 2.5.0\nCommand generated: " << command << endl;
+        cout << "Gitalias VERSION 2.5.5\nCommand generated: " << command << endl;
     }
     system(command.c_str());
     exit(0);
