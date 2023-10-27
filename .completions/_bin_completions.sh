@@ -36,9 +36,14 @@ _setHdmi_completions() {
 	COMPREPLY+=($(compgen -W "-h --help -m -M --Mainszie -H --Hdmisize -s --show -p --place -o --off " "${COMP_WORDS[1]}" 2>/dev/null))
 }
 
+_ff_completions() {
+	COMPREPLY+=($(compgen -W "-h --help --parms -p -v " "${COMP_WORDS[1]}" 2>/dev/null))
+}
+
 complete -F _gitalias_completions gitalias
 complete -F _makehere_completions makehere
 complete -F _msd_completions msd
 complete -F _msd_completions umsd
 complete -F _helper_completion runmain
 complete -F _setHdmi_completions setHdmi
+complete -F _ff_completions ff

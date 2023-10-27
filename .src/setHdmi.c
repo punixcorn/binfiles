@@ -37,7 +37,7 @@ typedef struct
 /* a global info */
 info Io;
 
-/* return what 'xrandr' gives */
+/* return what the command 'xrandr' gives */
 char *getbuffer()
 {
     FILE *fd = popen("xrandr", "r");

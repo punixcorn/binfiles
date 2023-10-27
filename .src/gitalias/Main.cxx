@@ -1,46 +1,37 @@
-/* Copyright 2023 punicorn
- * Gitalias a git alias
- */
+/*
 
-/* boost includes */
-#include <boost/algorithm/string.hpp>
-#include <boost/program_options.hpp>
-#include <boost/program_options/errors.hpp>
-#include <boost/program_options/value_semantic.hpp>
-/* C++ includes */
-#include <algorithm>
-#include <array>
-#include <fstream>
-#include <iostream>
-#include <new>
-#include <string>
-#include <string_view>
-#include <vector>
-/*C includes*/
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <dirent.h>
-#include <errno.h>
-#include <unistd.h>
-/* making life easier */
-#define null NULL
-#define arg(cmd, type) args[cmd].as<type>()
+Copyright 2023 punixcorn
+Gitalias a git alias
+
+*/
+
+#include "includes.h"
+/* space required for formmater */
+#include "defines.h"
 
 namespace opt = boost::program_options;
 using std::string, std::vector, std::string_view, std::cout, std::cerr, std::nothrow, std::endl, std::cin,
     std::ifstream;
 
-/* global varibales -> helps prevents extreme function arguments*/
-/* could use a class and functors */
-string messagebox, addbox, reponame, repodes, subcommand, Resetcommand, command = "[ -f /bin/git ] ";
-bool mode; // for the user request;
-vector<string>(Sreset);
+struct Globals
+{
+    /* global varibales -> helps prevents extreme function arguments*/
+    /* could use a class and functors */
+    Globals(){};
+    ~Globals(){};
+    string messagebox, addbox, reponame, repodes, subcommand, Resetcommand, command = "[ -f /bin/git ] ";
+    bool mode; /* user request mode */
+    vector<string>(Sreset);
+};
+
 struct Trips
 {
     // constructor resets everything in struct
     Trips()
+    {
+        memset(this, 0, sizeof(*this));
+    };
+    ~Trips()
     {
         memset(this, 0, sizeof(*this));
     };
@@ -50,7 +41,7 @@ struct Trips
 
 /* ============== function declarations ================*/
 /* append into subcommand [ ret: void ]*/
-void Isubcommand(const string_view &s1, const string_view &s2);
+void Isubcommand(Globals *g, const string_view &s1, const string_view &s2);
 /* prints error message e with help message and kills program [ret: void]*/
 auto errorT1(const string_view &e) -> void;
 /* prints error message e and kills the program  [ ret: void ]*/
@@ -62,11 +53,11 @@ auto getGitInfo() -> bool;
 /* check for staged files [ ret: bool ]*/
 auto Checkadd() -> bool;
 /* create an online repository [ ret: void ]*/
-auto createOnlineRepo() -> void;
+auto createOnlineRepo(Globals *g) -> void;
 /* runs the command [ ret: void ]*/
-auto run(bool v) -> void;
+auto run(Globals *g, bool v) -> void;
 /* parses the struct [ ret: void ] */
-auto parse(Trips *t) -> void;
+auto parse(Globals *g, Trips *t) -> void;
 
 /* ============== Main ============*/
 int main(int argc, char *argv[])
@@ -75,11 +66,19 @@ int main(int argc, char *argv[])
     {
         errorT1("No arguments passed...");
     }
+
     Trips *T = new (nothrow) Trips();
     if (T == null)
     {
         cerr << program_invocation_name << ": Program Crashed...\n"
              << "Err: Trip could not be allocated\n";
+        exit(1);
+    }
+    Globals *G = new (nothrow) Globals();
+    if (G == null)
+    {
+        cerr << program_invocation_name << ": Program Crashed...\n"
+             << "Err: Globals could not be allocated\n";
         exit(1);
     }
     try
@@ -97,10 +96,10 @@ int main(int argc, char *argv[])
             "Clone,C", opt::value<vector<string>>()->multitoken(), "clone a repository with given \"user/repo-name\"")(
             "Request,R", opt::value<string>()->default_value("https"), "Protocol to use when cloning, [ https/ssh ]")(
             "verbose,v", "print out parsed code")("log,l", "show log files")("Status,S", "show statuts")(
-            "origin,o", opt::value<string>(), "add an origin")("repo,r", opt::value<string>(&reponame),
+            "origin,o", opt::value<string>(), "add an origin")("repo,r", opt::value<string>(&G->reponame),
                                                                "name for creating an online repo * [i]")(
-            "Des,D", opt::value<string>(&repodes), "description for the online repo * [ii]")(
-            "type,t", opt::value<bool>(&mode)->value_name("bool"), "if repo should be private * [iii]")(
+            "Des,D", opt::value<string>(&G->repodes), "description for the online repo * [ii]")(
+            "type,t", opt::value<bool>(&G->mode)->value_name("bool"), "if repo should be private * [iii]")(
             "undo,u", opt::value<vector<string>>()->multitoken(),
             "*Reset back to a commit ,eg gitalias -u "
             "[ hard / soft / mixed ] "
@@ -141,9 +140,9 @@ int main(int argc, char *argv[])
             for (vector<string>::const_iterator i = args["message"].as<vector<string>>().begin();
                  i != args["message"].as<vector<string>>().end(); i++)
             {
-                messagebox += " -m '";
-                messagebox += *i;
-                messagebox += "' ";
+                G->messagebox += " -m '";
+                G->messagebox += *i;
+                G->messagebox += "' ";
             }
         }
 
@@ -154,7 +153,7 @@ int main(int argc, char *argv[])
         if (args.count("add"))
         {
             T->add = true;
-            addbox += " && git add ";
+            G->addbox += " && git add ";
             cout << "Files added: ";
             for (auto i : args["add"].as<vector<string>>())
             {
@@ -166,34 +165,34 @@ int main(int argc, char *argv[])
                 {
                     cout << i << " ";
                 }
-                addbox += i;
-                addbox += " ";
+                G->addbox += i;
+                G->addbox += " ";
             }
             cout << endl;
         }
         if (args.count("branch"))
         {
             T->branch = true;
-            Isubcommand(" && git branch ", "");
+            Isubcommand(G, " && git branch ", "");
             if (args["branch"].as<string>().length() > 0)
             {
-                subcommand += args["branch"].as<string>();
+                G->subcommand += args["branch"].as<string>();
             }
         }
         if (args.count("switch"))
         {
             T->switch_ = true;
-            Isubcommand(" && git switch ", args["switch"].as<string>());
+            Isubcommand(G, " && git switch ", args["switch"].as<string>());
         }
         if (args.count("delete"))
         {
             T->deleteBranch = true;
-            Isubcommand(" && git branch -D ", args["delete"].as<string>());
+            Isubcommand(G, " && git branch -D ", args["delete"].as<string>());
         }
         if (args.count("Merge"))
         {
             T->merge = true;
-            Isubcommand(" && git merge ", args["Merge"].as<string>());
+            Isubcommand(G, " && git merge ", args["Merge"].as<string>());
         }
         if (args.count("Pull"))
         {
@@ -201,11 +200,11 @@ int main(int argc, char *argv[])
             if (args["Pull"].as<string>() == "all")
             {
                 cout << "Pulling all remote branches..\n";
-                Isubcommand(" && git push --all ", "");
+                Isubcommand(G, " && git push --all ", "");
             }
             else
             {
-                Isubcommand(" && git pull ", args["Pull"].as<string>());
+                Isubcommand(G, " && git pull ", args["Pull"].as<string>());
             }
         }
         if (args.count("push"))
@@ -214,11 +213,11 @@ int main(int argc, char *argv[])
             if (arg("push", string) == "all")
             {
                 cout << "Pushing all branches...\n";
-                Isubcommand(" && git push --all ", "");
+                Isubcommand(G, " && git push --all ", "");
             }
             else
             {
-                Isubcommand(" && git push ", args["push"].as<string>());
+                Isubcommand(G, " && git push ", args["push"].as<string>());
             }
         }
         if (args.count("Clone"))
@@ -241,28 +240,28 @@ int main(int argc, char *argv[])
             {
                 tempstr += " ";
                 tempstr += dir;
-                Isubcommand(" && git clone ", tempstr);
-                Isubcommand(" ", "");
+                Isubcommand(G, " && git clone ", tempstr);
+                Isubcommand(G, " ", "");
             }
             else
             {
                 string clonestr{"&& git clone "};
                 if (args["Request"].as<string>() == "ssh")
                 {
-                    cout << program_invocation_name << ": using : ssh...\n";
+                    cout << "[Cloning Protocol]: ssh\n";
                     clonestr += "git@github.com:";
                     clonestr += tempstr;
                     clonestr += ".git ";
                 }
                 else
                 {
-                    cout << program_invocation_name << ": using : https...\n";
+                    cout << "[Cloning Protocol]: https\n";
                     clonestr += "https://github.com/";
                     clonestr += tempstr;
                     clonestr += " ";
                 }
                 clonestr += dir;
-                Isubcommand(clonestr, " ");
+                Isubcommand(G, clonestr, " ");
             }
         }
         if (args.count("verbose"))
@@ -272,12 +271,12 @@ int main(int argc, char *argv[])
         if (args.count("log"))
         {
             T->log = true;
-            Isubcommand(" && git log ", "");
+            Isubcommand(G, " && git log ", "");
         }
         if (args.count("Status"))
         {
             T->status = true;
-            Isubcommand(" && git status ", "");
+            Isubcommand(G, " && git status ", "");
         }
         if (args.count("origin"))
         {
@@ -288,7 +287,7 @@ int main(int argc, char *argv[])
                      " && git remote add origin git@github.com:%s && git branch -M "
                      "main && git push -u origin main",
                      arg("origin", string).c_str());
-            Isubcommand(otemp, "");
+            Isubcommand(G, otemp, "");
         }
         if (args.count("repo"))
         {
@@ -344,9 +343,9 @@ int main(int argc, char *argv[])
                 errorT2("Invalid parameters passed to --undo options are [ type of "
                         "reset (hard/mixed/soft) ] [ number of commits back ] \n");
 
-            Resetcommand += " && git reset ";
-            Resetcommand += Sreset_temp;
-            Isubcommand(Resetcommand, "");
+            G->Resetcommand += " && git reset ";
+            G->Resetcommand += Sreset_temp;
+            Isubcommand(G, G->Resetcommand, "");
         }
         if (args.count("git"))
         {
@@ -356,7 +355,7 @@ int main(int argc, char *argv[])
                 Git_temp += " && git ";
                 Git_temp += s;
             }
-            Isubcommand(Git_temp, "");
+            Isubcommand(G, Git_temp, "");
         }
         if (args.count("Grab"))
         {
@@ -382,7 +381,7 @@ int main(int argc, char *argv[])
             // checks if no changes were made, then it could not edit the string
             if (grabstr.length() == initLenght)
                 errorT2("could not resolve github link used\n");
-            Isubcommand(" && ", grabstr);
+            Isubcommand(G, " && ", grabstr);
         }
     }
     catch (const opt::error &ex)
@@ -392,7 +391,7 @@ int main(int argc, char *argv[])
     }
     try
     {
-        parse(T);
+        parse(G, T);
     }
     catch (...)
     {
@@ -403,23 +402,22 @@ int main(int argc, char *argv[])
 }
 /*===== End of Main =======*/
 
-auto Isubcommand(const string_view &s1, const string_view &s2) -> void
+auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2) -> void
 {
-    subcommand += s1;
+    g->subcommand += s1;
     if (s2.length() != 0)
-        subcommand += s2;
+        g->subcommand += s2;
 }
 
 auto errorT2(const string_view &e) -> void
 {
-    cerr << program_invocation_name << ": " << e;
+    cerr << "ERR: " << e;
     exit(1);
 }
 
 auto errorT1(const string_view &e) -> void
 {
-    cerr << program_invocation_name << ": " << e << "\n try \" " << program_invocation_name
-         << " --help \" for more information " << endl;
+    cerr << "ERR: " << e << "\n try \" " << program_invocation_name << " --help \" for more information \n";
     exit(1);
 }
 
@@ -504,7 +502,7 @@ auto Checkadd() -> bool
     return true;
 }
 
-auto createOnlineRepo() -> void
+auto createOnlineRepo(Globals *g) -> void
 {
     /* variables we need */
     string token;
@@ -538,20 +536,19 @@ auto createOnlineRepo() -> void
     if (token.length() > 41)
         errorT2("Was expecting a Token of char[40]\nFix: remove any whitespace in "
                 "/usr/githubToken\n");
-    /*converting bool mode to strings */
+    /*converting bool g->modeto strings */
     /* consent lol */
-    cout << " You are about to create an online repository with the following "
-            "data :\n"
-            "\tName of repository : "
-         << reponame
+    cout << "Online repository details:\n"
+            "\tName: "
+         << g->reponame
          << "\n"
             "\tDescription : "
-         << repodes
+         << g->repodes
          << "\n"
-            "\tMode: "
-         << (mode == true ? "Private" : "Public")
-         << "\n"
-            "continue with creation of the online repository [y,N] : ";
+            "\tVisibility: "
+         << (g->mode == true ? "Private" : "Public")
+         << "\n\n"
+            "Create repository [y,N] : ";
     cin >> confirm;
     if ((char)tolower(confirm) != 'y')
         errorT2("User has stopped the process\n");
@@ -564,7 +561,7 @@ auto createOnlineRepo() -> void
              " https://api.github.com/user/repos -d "
              "'{\"name\":\"%s\",\"description\":\"%s\",\"homepage\":\"https:"
              "//github.com\",\"private\":%s}'",
-             token.c_str(), reponame.c_str(), repodes.c_str(), (mode == true ? "true" : "false"));
+             token.c_str(), g->reponame.c_str(), g->repodes.c_str(), (g->mode == true ? "true" : "false"));
     /* running it here instead of passing it to run */
     FILE *instance = popen(crepo, "r");
     char buffer[100];
@@ -576,22 +573,22 @@ auto createOnlineRepo() -> void
                     "expired\n");
         }
     }
-    cout << program_invocation_name << ": " << reponame << " repository created succesfully\n";
+    cout << program_invocation_name << ": " << g->reponame << " repository created succesfully\n";
 }
 
-auto run(bool v) -> void
+auto run(Globals *g, bool v) -> void
 {
-    if (subcommand.length())
-        command += subcommand;
+    if (g->subcommand.length())
+        g->command += g->subcommand;
     if (v)
     {
-        cout << "Gitalias VERSION 2.5.5\nCommand generated: " << command << endl;
+        cout << "gitalias V2.5.9\nRunning Command:\n" << g->command << endl;
     }
-    system(command.c_str());
+    system(g->command.c_str());
     exit(0);
 }
 
-auto parse(Trips *t) -> void
+auto parse(Globals *g, Trips *t) -> void
 {
     string parseCommand;
     bool isInit = getGitInfo();
@@ -634,7 +631,7 @@ auto parse(Trips *t) -> void
 
     if (t->repoMode && t->repoName && t->repoDes)
     {
-        createOnlineRepo();
+        createOnlineRepo(g);
     }
     else if (t->repoMode || t->repoDes || t->repoName)
     {
@@ -649,35 +646,35 @@ auto parse(Trips *t) -> void
     if (t->commit)
     {
         /*check g trip */
-        if (strstr(subcommand.c_str(), "commit") != null)
+        if (strstr(g->subcommand.c_str(), "commit") != null)
             errorT2("Err: used commit in --git and --commit together");
         /* if not message trip  */
         if (!t->message)
         {
-            messagebox = " -m 'made some changes' ";
+            g->messagebox = " -m 'made some changes' ";
         }
         /* if not add trip */
         if (!t->add)
         {
             /* if no added files */
             if (!Checkadd())
-                addbox += " && git add . "; // add all
+                g->addbox += " && git add . "; // add all
         }
 
         /* commit trip  occured */
-        parseCommand += addbox;
+        parseCommand += g->addbox;
         parseCommand += " && git commit ";
-        parseCommand += messagebox;
+        parseCommand += g->messagebox;
     }
     else
     {
         if (t->message)
             errorT2("Cannot use option --message without a commit\n");
         if (t->add)
-            parseCommand += addbox;
+            parseCommand += g->addbox;
     }
     if (parseCommand.length() > 0)
-        command += parseCommand;
+        g->command += parseCommand;
 
-    run(t->verbose);
+    run(g, t->verbose);
 }
