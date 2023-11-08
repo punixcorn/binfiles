@@ -7,7 +7,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
-
+// Under Development
 /* [ file name ] : setHdmi
  * [ file purpose ] : a wrapper xrandr for setting up hdmi
  * [ mode ] : stable
@@ -79,7 +79,8 @@ void Exit(char *program_name, u_int8_t type)
                "--Hdmisize  -H [size]           specify an HDMI size [ default: 1920x1080 ]\n"
                "--show  -s                      ouput xrandr\n"
                "--place -p [right/left/up/down] where HDMI monitor should be placed relative to main monitor\n"
-               "--off -o                        turn of HDMI Display\n",
+               "--off -o                        turn of HDMI Display\n"
+               "--dual,-d                       duplicate Display\n",
                program_name);
         exit(0);
     }

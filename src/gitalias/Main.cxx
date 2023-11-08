@@ -560,17 +560,22 @@ auto createOnlineRepo(Globals *g) -> void
              "curl -X POST -H \"Authorization: Bearer %s\""
              " https://api.github.com/user/repos -d "
              "'{\"name\":\"%s\",\"description\":\"%s\",\"homepage\":\"https:"
-             "//github.com\",\"private\":%s}'",
+             "//github.com\",\"private\":%s}' 2>&1",
              token.c_str(), g->reponame.c_str(), g->repodes.c_str(), (g->mode == true ? "true" : "false"));
     /* running it here instead of passing it to run */
     FILE *instance = popen(crepo, "r");
-    char buffer[100];
-    while (fgets(buffer, 100, instance) != null)
+    char buffer[1000];
+    while (fgets(buffer, 999, instance) != null)
     {
         if (strstr(buffer, "Bad credentials") != null)
         {
             errorT2("Bad credentials : Please update your token, it may have "
                     "expired\n");
+        }
+        else if (strstr(buffer, "Could not resolve host: api.github.com") != null)
+        {
+            errorT2("Could not connect to api.github.com\n"
+                    "check internet connection\n");
         }
     }
     cout << program_invocation_name << ": " << g->reponame << " repository created succesfully\n";

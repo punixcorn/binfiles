@@ -1,8 +1,9 @@
 Aegukga
-.src/gitalias_boost/build/ 
-.src/gitalias_boost/bin
-.src/cli
-.src/obj.o
-.ccls-cache/ 
-.src/.clangd
+src/gitalias/build/ 
+src/gitalias/bin/
+src/cli
+src/obj.o
+ccls-cache/ 
+src/.clangd
+src/test
 
