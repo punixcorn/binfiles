@@ -5,10 +5,38 @@ Gitalias a git alias
 
 */
 
-#include "includes.h"
-/* space required for formmater */
-#include "defines.h"
+/* boost includes */
+#include <boost/algorithm/string.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/value_semantic.hpp>
+/* C++ includes */
+#include <algorithm>
+#include <array>
+#include <fstream>
+#include <iostream>
+#include <new>
+#include <string>
+#include <string_view>
+#include <vector>
+/*C includes*/
+#include <cstddef>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <dirent.h>
+#include <errno.h>
+#include <unistd.h>
+
+/* defines */
+#ifndef null
+#define null NULL
+#endif
+#define arg(cmd, type) args[cmd].as<type>()
+#define red "\e[42m"
+#define green "\e[43m"
+#define blue "\e[45m"
+#define rs "\e[0m"
 
 namespace opt = boost::program_options;
 using std::string, std::vector, std::string_view, std::cout, std::cerr, std::nothrow, std::endl, std::cin,

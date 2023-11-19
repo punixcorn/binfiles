@@ -1,8 +1,9 @@
-#include "defines.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <fmt/format.h>
+#include <format>
 
 /* [ file name ] : msd
  * [ file purpose ] : a wrapper around mount
