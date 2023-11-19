@@ -1,8 +1,8 @@
-## Binaries
+# Binaries
 
 Just a bunch of executable? scripts? in c and cpp ?
 
-## Install
+### INSTALL
 
 added an installer that will **add the folder to path and source the bashfiles
 for completions** <br/> **NB** : installer script works if this is cloned in
@@ -18,31 +18,51 @@ chmod a+x *
 
 or mannually just add the folder to path and source all files in `.completions`
 
+---
+
+### BUILD
+
+**build script** can be found in `./src/build.sh`
+
+##### Deps:
+
+- cmake
+- make
+- libfmt
+
+```bash
+cd ~
+git clone https://github.com/punixcorn/binfiles
+cd ~/binfiles/src
+chmod a+x ./build.sh
+./build.sh
+```
+
+---
+
 ### Source Files
 
-the **source codes** are located in `.src` `./.completions` holds **bash
-completions** for binaries
-
-to compile them run `makeall.sh` in `.src`
+- the **source codes** are located in `.src`
+- `.completions` holds **bash completions** for binaries
 
 ---
 
 # Documentation
 
-## Gitalias
+<h2 align="center">Gitalias</h2>
 
 **gitalias** is a binary that parses the command line args into git commands for
 you like an alias for git
 
-### Aim
+To be able to write a bunch of git commands in a single short line
 
-To be able to write a complex command in a single line eg:
+#### EXAMPLE :
 
-```
+```bash
 gitalias -i -a . -c -m "New commit made" "Added new files" -b testing-branch -s testing-branch -r newReop -D 'a repo for my testing branch' -t false -o punixcorn/newRepo
 ```
 
-**this command**:
+**DOES:**
 
 - inits a repository
 - add all files
@@ -52,7 +72,7 @@ gitalias -i -a . -c -m "New commit made" "Added new files" -b testing-branch -s 
 - creates an online repository called 'newReop' with the description and type
 - and pushes the files to the repo that was just created
 
-## other features
+### MORE INFO
 
 - if you don't **init** a repo, it will automatically ask to do so
 - you can commit without a message , an automatic message will be made
@@ -98,17 +118,99 @@ most in c
    continue with creation of the online repository [y,N] :
   ```
 
-## msd / umsd
+<h2 align="center">msd</h2>
+mount
 
-mount/umount block devices
+```bash
+msd /mnt sda1
+```
 
-## setHdmi
+### DOES
+
+- mounts `/dev/sda1` at `/mnt`
+- but with extra stuff on it
+
+### MORE INFO
+
+- `-lsblk` show block devices before running command
+
+```bash
+NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+nvme0n1     259:0    0 238.5G  0 disk 
+├─nvme0n1p1 259:1    0   512M  0 part /boot
+├─nvme0n1p2 259:2    0     9G  0 part [SWAP]
+├─nvme0n1p3 259:3    0 207.7G  0 part /
+└─nvme0n1p6 259:4    0  21.3G  0 part 
+mount:
+```
+
+    mount: /mnt nvme0n1p6
+
+- **mount point** and **block device** can be in any other
+- `msd /mnt sda1` **is the same as** `msd sda1 /mnt`
+- `msd /mnt /dev/sda1` is also valid
+
+<h2 align="center">umsd</h2>
+
+```bash
+umsd /mnt
+```
+
+- umounts filesystem at /mnt
+
+##### will be merged into msd
+
+---
+
+<h2 align="center">setHdmi</h2>
 
 set up hdmi connection in Xorg using `xrandr`
 
-## makehere
+---
 
-a simple c/cpp project setup
+<h2 align="center">makehere</h2>
+
+A very simple **C/C++** project setup
+
+#### EXAMPLE:
+
+```bash
+makehere -l cxx -p helloworld -f Main.cpp -c cmake
+```
+
+#### DOES:
+
+- Creates a folder called helloworld
+- creates a file Main.cpp in that folder
+- Creates a CMakeLists.txt and Makefile to compile the cxx file
+
+### MORE INFO
+
+- `-l --language`
+  - language of the project only `c` or `cpp`
+- `-p --project`
+  - name of the project
+- `-c  --compiler`
+  - compiler build Script `make` or `cmake`
+  - default: `make`
+- `-f  --filename`
+  - custom file name default: `main`
+- `-std --standard`
+  - set a standard `11 14 17 20 23 2a 2x 2b`
+  - default: `23`
+- `-t --template`
+  - copy template files
+  - basically copy premade `Makefile CMakeLists.txt Cpp files C files`
+  - `Makefile` from `~/.Makefile`
+  - `CMakeLists.txt` from `~/.CMakeLists.txt`
+  - `cpp file` from `~/.template.cpp`
+  - `c file` from `~/.template.c`
+
+##### NB:
+
+- `-l` and `-p` is compulsory, Everythin else has a default
+
+- using `--template / -t` requires you to mannually to edit them
 
 ---
 
