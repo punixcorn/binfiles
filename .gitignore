@@ -1,9 +1,15 @@
 Aegukga
 src/gitalias/build/ 
 src/gitalias/bin/
+src/makehere/build/ 
+src/makehere/build/ 
+src/build/ 
+src/bin/
 src/cli
 src/obj.o
 ccls-cache/ 
 src/.clangd
 src/test
+src/backup 
+src/Todo.md
 

@@ -8,6 +8,7 @@ Gitalias a git alias
 #include "includes.h"
 /* space required for formmater */
 #include "defines.h"
+#include <cstdio>
 
 namespace opt = boost::program_options;
 using std::string, std::vector, std::string_view, std::cout, std::cerr, std::nothrow, std::endl, std::cin,
@@ -562,6 +563,10 @@ auto createOnlineRepo(Globals *g) -> void
              "'{\"name\":\"%s\",\"description\":\"%s\",\"homepage\":\"https:"
              "//github.com\",\"private\":%s}' 2>&1",
              token.c_str(), g->reponame.c_str(), g->repodes.c_str(), (g->mode == true ? "true" : "false"));
+    //-------//
+    printf("%s\n", crepo);
+    exit(0);
+    //------//
     /* running it here instead of passing it to run */
     FILE *instance = popen(crepo, "r");
     char buffer[1000];

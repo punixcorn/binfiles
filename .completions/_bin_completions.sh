@@ -25,7 +25,7 @@ _gitalias_completions() {
 }
 
 _makehere_completions() {
-	COMPREPLY+=($(compgen -W "-h --help  -l  --language -c --compiler -f --filename -std --standard  -s --skip" "${COMP_WORDS[1]}" 2>/dev/null))
+	COMPREPLY+=($(compgen -W "-h --help  -l  --language -c --compiler -f --filename -std --standard  -t --template" "${COMP_WORDS[1]}" 2>/dev/null))
 }
 
 _msd_completions() {
