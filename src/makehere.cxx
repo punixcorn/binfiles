@@ -3,7 +3,6 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include <future>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -15,6 +14,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -159,10 +159,10 @@ struct Engine
                                                  "\t$(CC) -S . -B build/\n\n"
                                                  "run: main\n"
                                                  "\t@echo \"=========================================\"\n"
-                                                 "\t@./bin/main\n\n"
+                                                 "\t@./bin/{}\n\n"
                                                  "clean:\n"
                                                  "\t@rm -rf bin build 2>/dev/null\n",
-                                                 filename);
+                                                 filename, project);
 
         if (Templates)
         {
@@ -309,15 +309,15 @@ struct Engine
 
         // checking standard
         if (standard != "11" || standard != "14" || standard != "17" || standard != "20" || standard != "99" ||
-            standard != "2x" || standard != "2a" || standard != "2b")
+            standard != "23")
         {
             if (language == "c")
             {
-                standard = "2x";
+                standard = "23";
             }
             else
             {
-                standard = "2a";
+                standard = "23";
             }
         }
 
