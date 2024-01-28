@@ -3,6 +3,7 @@ CC_=g++
 CFLAGS= -std=gnu2x --all-warnings -ggdb
 CPPFLAGS= -std=gnu++2b --all-warnings -ggdb 
 FILE=
+EX_FILE=
 DFLAGS=
 OUTPUT=cli
 
