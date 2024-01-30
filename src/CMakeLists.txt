@@ -26,6 +26,10 @@ target_link_libraries(
 target_link_libraries(
    makehere PRIVATE fmt::fmt-header-only
                           -static)
+target_link_libraries(
+   msd PRIVATE fmt::fmt-header-only
+                          -static)
+
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 

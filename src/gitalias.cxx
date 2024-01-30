@@ -10,13 +10,16 @@ Gitalias a git alias
 #include <boost/program_options/value_semantic.hpp>
 #include <boost/property_tree/json_parser.hpp>
 /* C++ includes */
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <new>
+#include <numeric>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 /*C includes*/
 #include <dirent.h>
@@ -27,6 +30,11 @@ Gitalias a git alias
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
+/*fmt*/
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/std.h>
 
 /* defines */
 #ifndef null
@@ -42,61 +50,63 @@ namespace opt = boost::program_options;
 using std::string, std::vector, std::string_view, std::cout, std::cerr,
     std::nothrow, std::endl, std::cin, std::ifstream;
 
+/* Hold username and token */
 struct UserInfo {
     std::string token;
     std::string username;
-    friend auto findFile(const string &place, const string_view &file) -> bool;
 };
 
+/* global varibales -> helps prevents extreme function arguments*/
 struct Globals {
-    /* global varibales -> helps prevents extreme function arguments*/
-    /* could use a class and functors */
     Globals(){};
     ~Globals(){};
     string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
         command = "[ -f /bin/git ] ";
     bool mode; /* user request mode */
     vector<string>(Sreset);
-    /* grabs the token from /usr/githubToken*/
 };
 
 struct Trips {
-    // constructor resets everything in struct
     Trips() { memset(this, 0, sizeof(*this)); };
-    ~Trips() { memset(this, 0, sizeof(*this)); };
+    ~Trips() {
+        memset(this, 0, sizeof(*this));
+        delete this;
+    };
     bool commit, message, add, init, branch, switch_, deleteBranch, merge, pull,
         push, origin, log, status, repoName, repoDes, repoMode, verbose, Rreset,
         git;
 };
 
 /* ============== function declarations ================*/
-/* append into subcommand [ ret: void ]*/
+/* append into subcommand*/
 void Isubcommand(Globals *g, const string_view &s1, const string_view &s2);
-/* prints error message e with help message and kills program [ret: void]*/
-auto errorT1(const string_view &e) -> void;
-/* prints error message e and kills the program  [ ret: void ]*/
-auto errorT2(const string_view &e) -> void;
-/* checks if you have a git repo init [ ret: bool ]*/
+/* prints error message e with help message and kills program */
+auto exitWithHelp(const string_view &e, int return_val = 1) -> void;
+/* prints error message e and kills the program */
+auto exitWithoutHelp(const string_view &e, int return_val = 1) -> void;
+/* checks if you have a git repo init */
 auto getGitInfo() -> bool;
-/* check for staged files [ ret: bool ]*/
+/* check for staged files */
 auto checkStaged() -> bool;
-/* check is thing exists at place [ ret: bool ]*/
+/* check is thing exists at place */
 [[nodiscard("if file exists in place")]] auto findFile(const string &place,
                                                        const string_view &file)
     -> bool;
-/* create an online repository [ ret: void ]*/
+/*finds config file and returns Json vaules about the user*/
+[[nodiscard("grab UserInfo from file")]] auto ParseUserInfo() -> UserInfo;
+/* create an online repository */
 auto createOnlineRepo(Globals *g) -> void;
-/* runs the command [ ret: void ]*/
+/* runs the command */
 auto gitalias_main(Globals *g, bool v) -> void;
-/* parses the struct [ ret: void ] */
+/* parses the struct  */
 auto parse(Globals *g, Trips *t) -> void;
-[[nodiscard("githubUserInfo file has been parsed")]] auto setUpGitHubUserFile()
-    -> bool;
+[[nodiscard("githubUserInfo file has been parsed")]] auto ParseUserInfo()
+    -> UserInfo;
 
 /* ============== Main ============*/
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        errorT1("No arguments passed...");
+        exitWithHelp("No arguments passed...");
     }
     Trips *T = new (nothrow) Trips();
     if (T == null) {
@@ -149,7 +159,7 @@ int main(int argc, char *argv[]) {
             "append git commands [ gitalias -g \" git ... \" ]")(
             "Grab,G", opt::value<string>(),
             "grab a specific folder from a github repo")(
-            "Modify,M", opt::value<vector<string>>()->multitoken(),
+            "Visibility,V", opt::value<vector<string>>()->multitoken(),
             "Modify the status of a repo[private,public]");
 
         opt::variables_map args;
@@ -245,32 +255,72 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if (args.count("Modify")) {
-            if (arg("Modify", vector<string>).size() > 2) {
-                errorT2(
-                    "Invalid arguments\nUsage: --Modify <repoName> "
+        if (args.count("Visibility")) {
+            if (arg("Visibility", vector<string>).size() != 2) {
+                exitWithoutHelp(
+                    "Invalid arguments\nUsage: --Visibility <repoName> "
                     "<private/public>");
             }
-            bool first_is_repo_name{false};
-            if (arg("Modify", vector<string>).front() != "private" ||
-                arg("Modify", vector<string>).front() != "public") {
-                first_is_repo_name = true;
-            }
-            bool lcheck = findFile("/bin", "curl");
-            if (!lcheck)
-                errorT2("Could not find dependency : Svn... Terminating");
-            bool test = setUpGitHubUserFile();
 
-            /* char *Modifystr = new (nothrow) char[500]; */
-            /* { */
-            /*     std::snprintf( */
-            /*         Modifystr, 500, */
-            /*         "curl -u %s:%s --data \"{\"private\": \"true\"}\" " */
-            /*         "--request PATCH https:\/\/api.github.com/repos/%s/%s",
-             */
-            /*         arg("Modify", vector<string>).front(), token.c_str(), */
-            /*         username, arg("Modify", vector<string>).last); */
-            /* } */
+            int index_of_reponame{0};
+
+            if ((arg("Visibility", vector<string>)[0] == "private") ||
+                (arg("Visibility", vector<string>)[0] == "public")) {
+                index_of_reponame = 1;
+            }
+
+            if (arg("Visibility",
+                    vector<string>)[(index_of_reponame == 1 ? 0 : 1)] !=
+                    "private" &&
+                arg("Visibility",
+                    vector<string>)[(index_of_reponame == 1 ? 0 : 1)] !=
+                    "public") {
+                exitWithoutHelp(
+                    "Invalid arguments\nUsage: --Visibility <repoName> "
+                    "<private/public>");
+            };
+
+            if (!findFile("/bin", "curl"))
+                exitWithoutHelp(
+                    "Could not find dependency : Svn... Terminating");
+
+            UserInfo User = ParseUserInfo();
+            char *Visibilitystr = new (nothrow) char[500];
+
+            std::snprintf(
+                Visibilitystr, 500,
+                "curl -u %s:%s --data \"{\\\"private\\\": \\\"%s\\\"}\" "
+                "--request PATCH https:\/\/api.github.com/repos/%s/%s",
+                User.username.c_str(), User.token.c_str(),
+                arg("Visibility",
+                    vector<string>)[(index_of_reponame == 1 ? 0 : 1)] ==
+                        "private"
+                    ? "true"
+                    : "false",
+                User.username.c_str(),
+                arg("Visibility", vector<string>)[index_of_reponame].c_str());
+
+            FILE *instance = popen(Visibilitystr, "r");
+            char buffer[1000];
+            while (fgets(buffer, 999, instance) != null) {
+                if (strstr(buffer, "Bad credentials") != null) {
+                    exitWithoutHelp(
+                        "Bad credentials : Please update your token, it may "
+                        "have "
+                        "expired");
+                } else if (strstr(buffer,
+                                  "Could not resolve host: api.github.com") !=
+                           null) {
+                    exitWithoutHelp(
+                        "Could not connect to api.github.com\n"
+                        "check internet connection");
+                }
+            }
+
+            fmt::print("{}/{} has been made {} succesfully\n", User.username,
+                       arg("Visibility", vector<string>)[index_of_reponame],
+                       arg("Visibility",
+                           vector<string>)[(index_of_reponame == 1 ? 0 : 1)]);
         }
 
         if (args.count("Clone")) {
@@ -280,7 +330,7 @@ int main(int argc, char *argv[]) {
             if (tsize == 2) {
                 dir = arg("Clone", vector<string>).back();
             } else if (tsize > 2) {
-                errorT2(
+                exitWithoutHelp(
                     "--Clone / -C takes in only 2 args max, The folder to "
                     "clone "
                     "and the dir to clone into");
@@ -366,11 +416,10 @@ int main(int argc, char *argv[]) {
                 }
             }
             if (Sreset_temp.length() <= 0)
-                errorT2(
+                exitWithoutHelp(
                     "Invalid parameters passed to --undo options are [ "
                     "type of "
-                    "reset (hard/mixed/soft) ] [ number of commits back ] "
-                    "\n");
+                    "reset (hard/mixed/soft) ] [ number of commits back ] ");
 
             G->Resetcommand += " && git reset ";
             G->Resetcommand += Sreset_temp;
@@ -387,10 +436,11 @@ int main(int argc, char *argv[]) {
         if (args.count("Grab")) {
             bool lcheck = findFile("/bin", "svn");
             if (!lcheck)
-                errorT2("Could not find dependency : Svn... Terminating");
+                exitWithoutHelp(
+                    "Could not find dependency : Svn... Terminating");
             string grabstr("svn export ");
             grabstr.append(arg("Grab", string));
-            int initLenght = grabstr.length();
+            int initlength = grabstr.length();
 
             // first checks for a folder:
             //  1: checks for "tree/main"
@@ -406,8 +456,8 @@ int main(int argc, char *argv[]) {
 
             // checks if no changes were made, then it could not edit the
             // string
-            if (grabstr.length() == initLenght)
-                errorT2("could not resolve github link used\n");
+            if (grabstr.length() == initlength)
+                exitWithoutHelp("could not resolve github link used\n");
             Isubcommand(G, " && ", grabstr);
         }
     } catch (const opt::error &ex) {
@@ -423,6 +473,7 @@ int main(int argc, char *argv[]) {
     }
     exit(0);
 }
+
 /*===== End of Main =======*/
 
 auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
@@ -431,45 +482,106 @@ auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
     if (s2.length() != 0) g->subcommand += s2;
 }
 
-auto errorT2(const string_view &e) -> void {
-    cerr << "ERR: " << e;
-    exit(1);
+auto exitWithoutHelp(const string_view &e, int return_val) -> void {
+    fmt::print(stderr, "ERR: {}\n", e);
+    exit(return_val);
 }
 
-auto errorT1(const string_view &e) -> void {
-    cerr << "ERR: " << e << "\n try \" " << program_invocation_name
-         << " --help \" for more information \n";
-    exit(1);
+auto exitWithHelp(const string_view &e, int return_val) -> void {
+    fmt::print(stderr, "ERR: {}\ntry {} -- help for more information \n", e,
+               program_invocation_name);
+    exit(return_val);
 }
 
-[[nodiscard("githubUserInfo file has been parsed")]] auto setUpGitHubUserFile()
-    -> bool {
-    std::string filename = "~/.githubUserInfo";
+[[nodiscard("grab UserInfo from file")]] auto ParseUserInfo() -> UserInfo {
+    UserInfo userinfo;
+    std::string filename = getenv("HOME");
+    bool fileCreated{false};
+    filename.append("/.config/gitalias/githubuserinfo.json");
+
     std::fstream FileToWorkWith;
-    FileToWorkWith.open(
-        filename, std::fstream::in | std::fstream::out | std::fstream::app);
-    // If file does not exist, Create new file
-    if (!FileToWorkWith) {
-        errorT2("Cannot open file, file does not exist. Creating new file..");
+    FileToWorkWith.open(filename, std::fstream::in | std::fstream::out);
+
+    // If file does not exist, Create new folder for the file
+    if (!FileToWorkWith.is_open()) {
+        fileCreated = true;
+        fmt::print(
+            "Cannot open file, file does not exist. Creating new file..\n");
+
+        // checking if folder exists
+        if (!std::filesystem::exists(std::string(
+                std::string(getenv("HOME")).append("/.config/gitalias")))) {
+            std::filesystem::create_directory(std::string(
+                std::string(getenv("HOME")).append("/.config/gitalias")));
+        };
+
         FileToWorkWith.open(filename, std::fstream::in | std::fstream::out |
                                           std::fstream::trunc);
-        if (!FileToWorkWith) {
-            errorT2("error creating file\n");
+        if (!FileToWorkWith.is_open()) {
+            exitWithoutHelp("\nerror creating file\n");
         }
-        FileToWorkWith << std::format(
-            "{{\n"
-            "\"username\":\"Username\",\n"
-            "\"token\" : \"Token\"\n"
-            "}}\n");
-    } else {
-        /* parse Json */
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_json(filename, pt);
-        std::cout << "Username :" << pt.get<std::string>("username")
-                  << " Token :" << pt.get<std::string>("token") << std::endl;
+
+        if (FileToWorkWith.is_open() && !FileToWorkWith.bad()) {
+            FileToWorkWith << fmt::format(
+                "{{\n"
+                "\"username\":\"YOUR_GITHUB_USERNAME\",\n"
+                "\"token\" : \"YOUR_GITHUB_TOKEN\"\n"
+                "}}\n");
+        } else {
+            fmt::print("error with opened file\n");
+            exit(1);
+        }
     }
+
+    if (FileToWorkWith.is_open() && !FileToWorkWith.bad() &&
+        FileToWorkWith.good()) {
+        /* parse Json */
+        char *s = new char[2];
+        if (FileToWorkWith.getline(s, 1)) {
+            if (std::string(s).size() == 0) {
+                fmt::print("ERROR with opened file :: EMPTY FILE\n");
+            }
+            exit(1);
+        }
+        try {
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_json(filename, pt);
+            userinfo.username = pt.get<std::string>("username");
+            userinfo.token = pt.get<std::string>("token");
+        } catch (const boost::wrapexcept<
+                 boost::property_tree::json_parser::json_parser_error> &ex) {
+            fmt::print("{}", ex.what());
+        }
+    }
+
+    if (fileCreated || userinfo.username == "YOUR_GITHUB_USERNAME" ||
+        userinfo.token == "YOUR_GITHUB_TOKEN") {
+        exitWithoutHelp(
+            "~/.config/gitalias/githubuserinfo was generated\n"
+            "It a default config has been created\n"
+            "Edit the json file and replace the values with your vaules\n"
+            "And try again\n"
+            "This program will terminte\n");
+    }
+
     FileToWorkWith.close();
-    return true;
+
+    if (userinfo.token.size() == 0 || userinfo.username.size() == 0) {
+        exitWithoutHelp(
+            "Invalid values obtain from config file "
+            "~/.config/gitalias/githubuserinfo");
+    }
+
+    // confirming token size
+
+    if (userinfo.token.size() > 41) {
+        exitWithoutHelp(
+            "Invalid values obtain from config file "
+            "~/.config/gitalias/githubuserinfo\n"
+            "Token length > 40 chars");
+    }
+
+    return userinfo;
 }
 
 /* auto parseGitHubUserFile() -> UserInfo { */
@@ -477,10 +589,12 @@ auto errorT1(const string_view &e) -> void {
 /*     int check = findFile("/usr", "githubToken"); */
 /*     if (!check) { */
 /*         errorT2( */
-/*             "githubUserInfo file not found\ncreate the file 'githubToken' in
+/*             "githubUserInfo file not found\ncreate the file 'githubToken'
+ * in
  * " */
 /*             "/usr " */
-/*             "and put only your token inside\nthis is needed to create the "
+/*             "and put only your token inside\nthis is needed to create the
+ * "
  */
 /*             "online repository\n"); */
 /*         exit(1); */
@@ -528,7 +642,7 @@ auto getGitInfo() -> bool {
     /* apparently fopen will bug out if there is and error hence 2>&1 is
         needed */
     fd = popen("git status 2>&1 ", "r");
-    if (fd == null || temp == null) errorT2("Program Crashed...\n");
+    if (fd == null || temp == null) exitWithoutHelp("Program Crashed...");
     /* compares the whole string and if it fails to find the string , it
      * will exit and set tempTrip to true hence a second check will be made
      */
@@ -555,7 +669,7 @@ auto checkStaged() -> bool {
     /* when there is no add we get the strings pasted below */
     FILE *fd = popen(" git status ", "r");
     char *temp = new (nothrow) char[1024];
-    if (fd == null || temp == null) errorT2("Program Crahsed...\n");
+    if (fd == null || temp == null) exitWithoutHelp("Program Crahsed...");
     while (fgets(temp, 1023, fd)) {
         string_view tempcmp{temp};
         if (tempcmp == "Changes not staged for commit:\n" ||
@@ -577,40 +691,33 @@ auto checkStaged() -> bool {
 
 auto createOnlineRepo(Globals *g) -> void {
     /* variables we need */
-    string token{};
-
+    string token = ParseUserInfo().token;
     char *crepo = new (nothrow) char[500];
-    /*logic */
+
     if (crepo == null)
-        errorT2("Program Crashed... unable to alloated string memory\n");
+        exitWithoutHelp("Program Crashed... unable to alloated string memory");
     char confirm{};
-    /* checking if the token's length is 40 like every other */
-    if (token.length() > 41)
-        errorT2(
-            "Was expecting a Token of lenght 40 chars\nFix: remove any "
-            "whitespace "
-            "in "
-            "/usr/githubToken\n");
+
     /* consent lol */
-    cout << "Online repository details:\n"
-            "\tName: "
-         << g->reponame
-         << "\n"
-            "\tDescription : "
-         << g->repodes
-         << "\n"
-            "\tVisibility: "
-         << (g->mode == true ? "Private" : "Public")
-         << "\n\n"
-            "Create repository [y,N] : ";
+    fmt::print(
+        "Online repository details:\n"
+        "\tName: {}\n"
+        "\tDescription : {}\n"
+        "\tVisibility: {}\n"
+        "\n\n"
+        "Create repository [y,N] : ",
+        g->reponame, g->repodes, (g->mode == true ? "Private" : "Public"));
+
     cin >> confirm;
     if ((char)tolower(confirm) != 'y')
-        errorT2("User has stopped the process\n");
-    bool check = findFile("/bin", "curl");
-    if (!check)
-        errorT2(
-            "curl not found\nProgram curl is needed for this "
-            "operation\nDownload curl to use this feature\n");
+        exitWithoutHelp("User has stopped the process");
+
+    if (!findFile("/bin", "curl")) {
+        exitWithoutHelp(
+            "Dependency curl not found\nProgram curl is needed for this "
+            "operation\nDownload curl to use this feature");
+    }
+
     snprintf(crepo, 500,
              "curl -X POST -H \"Authorization: Bearer %s\""
              " https://api.github.com/user/repos -d "
@@ -618,23 +725,25 @@ auto createOnlineRepo(Globals *g) -> void {
              "//github.com\",\"private\":%s}' 2>&1",
              token.c_str(), g->reponame.c_str(), g->repodes.c_str(),
              (g->mode == true ? "true" : "false"));
-    //-------//
-    printf("%s\n", crepo);
-    exit(0);
+
+    /* //-------// */
+    /* printf("%s\n", crepo); */
+    /* exit(0); */
     //------//
+
     /* running it here instead of passing it to run */
     FILE *instance = popen(crepo, "r");
     char buffer[1000];
     while (fgets(buffer, 999, instance) != null) {
         if (strstr(buffer, "Bad credentials") != null) {
-            errorT2(
+            exitWithoutHelp(
                 "Bad credentials : Please update your token, it may have "
-                "expired\n");
+                "expired");
         } else if (strstr(buffer, "Could not resolve host: api.github.com") !=
                    null) {
-            errorT2(
+            exitWithoutHelp(
                 "Could not connect to api.github.com\n"
-                "check internet connection\n");
+                "check internet connection");
         }
     }
     cout << program_invocation_name << ": " << g->reponame
@@ -644,7 +753,7 @@ auto createOnlineRepo(Globals *g) -> void {
 auto gitalias_main(Globals *g, bool v) -> void {
     if (g->subcommand.length()) g->command += g->subcommand;
     if (v) {
-        cout << "gitalias V2.5.9\nRunning Command:\n" << g->command << endl;
+        cout << "gitalias V2.6.0\nRunning Command:\n" << g->command << endl;
     }
     system(g->command.c_str());
     exit(0);
@@ -670,7 +779,7 @@ auto parse(Globals *g, Trips *t) -> void {
                 cin >> chrInit;
                 if ((char)tolower(chrInit) != 'y') {
                     t->init = false;
-                    errorT2("No git repository found, exiting..\n");
+                    exitWithoutHelp("No git repository found, exiting..");
                     exit(1);
                 } else
                     parseCommand += " && git init ";
@@ -697,7 +806,7 @@ auto parse(Globals *g, Trips *t) -> void {
     if (t->commit) {
         /*check g trip */
         if (strstr(g->subcommand.c_str(), "commit") != null)
-            errorT2("Err: used commit in --git and --commit together");
+            exitWithoutHelp("Err: used commit in --git and --commit together");
         /* if not message trip  */
         if (!t->message) {
             g->messagebox = " -m 'made some changes' ";
@@ -714,7 +823,7 @@ auto parse(Globals *g, Trips *t) -> void {
         parseCommand += g->messagebox;
     } else {
         if (t->message)
-            errorT2("Cannot use option --message without a commit\n");
+            exitWithoutHelp("Cannot use option --message without a commit");
         if (t->add) parseCommand += g->addbox;
     }
     if (parseCommand.length() > 0) g->command += parseCommand;

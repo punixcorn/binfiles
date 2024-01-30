@@ -7,6 +7,10 @@ EX_FILE=
 DFLAGS=
 OUTPUT=cli
 
+all:
+	cmake -S . -B build
+	cmake --build build
+
 c: cmain.o 
 	$(CC) $(FILE) -o $(OUTPUT) $(CFLAGS) $(DFLAGS)
 
