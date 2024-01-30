@@ -1,8 +1,11 @@
-#include "defines.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <algorithm>
+#include <cerrno>
+#include <cstdlib>
+#include <fmt/core.h>
+#include <fmt/format.h>
 #include <string.h>
 #include <unistd.h>
+#include <vector>
 
 /* [ file name ] : msd
  * [ file purpose ] : a wrapper around mount
@@ -36,14 +39,37 @@ void mountsd(char *str1, char *str2, char *exe_name)
     strncat(command, temp, 99);
     system(command);
 }
+class Engine
+{
+  private:
+    int argc;
+    char **argv;
 
+  public:
+    void err(const std::string _err, int _exit = 1)
+    {
+        fmt::print("ERR :{}\n", _err);
+        exit(_exit);
+    }
+
+    void parse(char **Argv, int Argc){};
+};
 /* read from a file the dev type and where to mount
  * and can also read aliases
  */
 
 int main(int argc, char **argv)
 {
-    if (argc == 2)
+
+    Engine *E = new Engine;
+
+    if (argc > 2)
+    {
+        E->err(fmt::format("invaild args passed\n try {} --help for more information\n", program_invocation_name));
+    }
+    E->parse(argv, argc);
+
+    if (1)
     {
         if (strcmp("-h", *(argv + 1)) == 0)
         {

@@ -3,8 +3,13 @@ CC_=g++
 CFLAGS= -std=gnu2x --all-warnings -ggdb
 CPPFLAGS= -std=gnu++2b --all-warnings -ggdb 
 FILE=
+EX_FILE=
 DFLAGS=
 OUTPUT=cli
+
+all:
+	cmake -S . -B build
+	cmake --build build
 
 c: cmain.o 
 	$(CC) $(FILE) -o $(OUTPUT) $(CFLAGS) $(DFLAGS)

@@ -7,13 +7,61 @@
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
-// Under Development
+// Under Development USE xrandrlib to handle display instead of terminal
+// #include <X11/Xlib.h>
+// #include <X11/extensions/Xrandr.h>
+
+/*
+    // Usings
+    USING_NS_MF;
+
+////////////////////////////////////////////////////////////////////////////////
+// Public Methods                                                             //
+////////////////////////////////////////////////////////////////////////////////
+cc::Size Device::getScreenSize()
+{
+    const char *pDisplayName = std::getenv("DISPLAY");
+    Display *pDisplay = XOpenDisplay(pDisplayName);
+    Screen *pScreen = DefaultScreenOfDisplay(pDisplay);
+    Window window = RootWindowOfScreen(pScreen);
+
+    Rotation rotation;
+    int nsize;
+
+    XRRScreenConfiguration *pScreenConfig = XRRGetScreenInfo(pDisplay, window);
+    SizeID currentSize = XRRConfigCurrentConfiguration(pScreenConfig, &rotation);
+    XRRScreenSize *sizes = XRRConfigSizes(pScreenConfig, &nsize);
+
+    for (int i = 0; i < nsize; i++)
+    {
+        printf("%c%-2d %5d x %-5d  (%4dmm x%4dmm )", i == currentSize ? '*' : ' ', i, sizes[i].width, sizes[i].height,
+               sizes[i].mwidth, sizes[i].mheight);
+    }
+
+    return cc::Size(1024, 758);
+}
+
+*/
+
 /* [ file name ] : setHdmi
  * [ file purpose ] : a wrapper xrandr for setting up hdmi
  * [ mode ] : stable
  * [ sample ] : setHdmi
  * [ sample2 ] : setHdmi -m eDP1
  */
+
+/*
+Display *dpy;
+XRRScreenResources *screen;
+XRRCrtcInfo *crtc_info;
+
+dpy = XOpenDisplay(":0");
+screen = XRRGetScreenResources(dpy, DefaultRootWindow(dpy));
+// 0 to get the first monitor
+crtc_info = XRRGetCrtcInfo(dpy, screen, screen->crtcs[0]);
+
+After that crtc_info->width will contain the width of the monitor and
+    crtc_info->x the x position.*/
 
 /* will add options to pick if mainscreen position relative to others */
 /* will add error handling later */
@@ -54,7 +102,7 @@ char *getbuffer()
 
 [[nodiscard("true if char * str starts with -")]] bool isNotOption(char *str)
 {
-    if (str != null && str[0] != '-')
+    if (str != NULL && str[0] != '-')
         return true;
     return false;
 };
@@ -63,14 +111,20 @@ char *getbuffer()
    2 => exit with help message
 */
 
-void Exit(char *program_name, u_int8_t type)
+typedef enum
 {
-    if (type == 1)
+    normal_exit,
+    help_exit
+} exit_mode;
+
+void Exit(char *program_name, exit_mode mode)
+{
+    if (mode == normal_exit)
     {
         fprintf(stderr, "Invalid arguments passed\ntry %s --help for more information", program_name);
         exit(1);
     }
-    else if (type == 2)
+    else if (mode == help_exit)
     {
         printf("%s: Used to setup dual displays\n"
                "--help  -h                      print this help message\n"
@@ -181,10 +235,10 @@ void setup(const int argc, char **argv, int *index, const arg_size op)
 
 int main(int argc, char **argv)
 {
-    Io.monitor = null;
+    Io.monitor = NULL;
     Io.show = false;
-    Io.Mainsize = null;
-    Io.Hdmisize = null;
+    Io.Mainsize = NULL;
+    Io.Hdmisize = NULL;
 
     int i = {1};
 
