@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <array>
+#include <new>
+#include <stdexcept>
 #include <string>
 #include <vector>
 using namespace std;
@@ -13,15 +15,16 @@ using namespace fmt;
 // place disk
 // -p place <disk>
 // -d <disk> <place>
-//
+
 class Engine {
    private:
     int Argc;
     char **Argv;
 
    public:
+    Engine(Engine &e) = default;
     Engine(Engine &&e) = default;
-
+    Engine(Engine *e);
     Engine(int argc, char **argv) : Argc(argc), Argv(argv) {
         if (argc <= 1) {
             fmt::print("Error Invalid arguments passed\n");
@@ -89,7 +92,12 @@ class Engine {
                                    "--place needs an argument, where to mount "
                                    "the disk");
                         place = true;
-                        place_p = std::string(Argv[i]);
+                        try {
+                            place_p =
+                                std::string(Argv[i] == NULL ? throw : Argv[i]);
+                        } catch (const std::logic_error &e) {
+                            fmt::print("{}", e.what());
+                        }
 
                     } else if (isOptionFound(Argv[i], "--disk")) {
                         ++i;
@@ -131,5 +139,6 @@ class Engine {
 
 [[nodiscard("foo")]] int main(int argc, char **argv) {
     Engine e(argc, argv);
+    Engine f(&e);
     return 0;
 }
