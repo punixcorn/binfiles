@@ -14,12 +14,14 @@ Gitalias a git alias
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <new>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 /* C includes */
+#include <alloca.h>
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
@@ -67,10 +69,7 @@ struct Globals {
 
 struct Trips {
     Trips() { memset(this, 0, sizeof(*this)); };
-    ~Trips() {
-        memset(this, 0, sizeof(*this));
-        delete this;
-    };
+    ~Trips() { delete this; };
     bool commit, message, add, init, branch, switch_, deleteBranch, merge, pull,
         push, origin, log, status, repoName, repoDes, repoMode, verbose, Rreset,
         git;
@@ -473,6 +472,7 @@ int main(int argc, char *argv[]) {
         cerr << program_invocation_name << ": " << ex.what() << "\n";
         exit(1);
     }
+
     try {
         parse(G, T);
     } catch (...) {
@@ -482,8 +482,6 @@ int main(int argc, char *argv[]) {
     }
     exit(0);
 }
-
-/*===== End of Main =======*/
 
 auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
     -> void {
