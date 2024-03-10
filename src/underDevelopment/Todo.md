@@ -23,4 +23,4 @@ xrandr --output DVI-D-1 --same-as DP-1
 
 - [x] move fmt into gitalias
 
-- [] remake mv2
+- [x] remake msd

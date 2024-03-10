@@ -5,6 +5,11 @@ col2="\e[33m"
 rs="\e[0m"
 
 DIR=$1
+if [ ! -z "$1" ] && [ "$1" == "fooo" ]; then
+	echo
+	exit
+fi
+
 [ -z "$DIR" ] && DIR='bin'
 
 [ ! -d $DIR ] && mkdir $DIR
