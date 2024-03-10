@@ -1,19 +1,20 @@
 #include <assert.h>
+#include <dirent.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <dirent.h>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 using std::string, std::string_view;
 #ifndef err
 #define err "\e[32m[ERR]\e[0m"
-#endif // !err
+#endif  // !err
 
 /*
  * [file] : runfile
@@ -31,39 +32,33 @@ using std::string, std::string_view;
  */
 
 // a function will return this struct[ filename and if_found ]
-struct Findmain
-{
+struct Findmain {
     Findmain(string Name, bool Found) : filename(Name), found(Found){};
     string filename;
     bool found;
 };
 
 // pass in a struct
-struct Trips
-{
-  private:
-    char **Args = nullptr; // argv
-    int argCount{};        // argc
+struct Trips {
+   private:
+    char **Args = nullptr;  // argv
+    int argCount{};         // argc
     FILE *fptr = nullptr;
     string filename{};
     string command{};
     // options avaliable for each file
 
-  public:
+   public:
     Trips(char **argv, int argc) : Args(argv), argCount(argc){};
-    ~Trips()
-    {
+    ~Trips() {
         delete[] Args;
         delete fptr;
     };
 
-    // any number(count) of arguments to put into command;
-    void putsCommand(int count, ...);
+    // any number(count) of arguments to append to command;
+    void appendToCommand(int count, ...);
     // set file name
-    void setFilename(string Filename)
-    {
-        filename = Filename;
-    };
+    void setFilename(string Filename) { filename = Filename; };
     // run files
     void runcpp();
     void runpy();
@@ -77,15 +72,13 @@ struct Trips
     // find main.* file
     Findmain friend *findmain(void);
 
-}; // Trips
+};  // Trips
 
-void Trips::putsCommand(int count, ...)
-{
+void Trips::appendToCommand(int count, ...) {
     std::va_list args;
     va_start(args, count);
     assert(count != 0);
-    while (count > 0)
-    {
+    while (count > 0) {
         command += string(va_arg(args, char *));
         count--;
     }
@@ -93,112 +86,105 @@ void Trips::putsCommand(int count, ...)
     assert(command.size() != 0);
 }
 
-void setFile(string filename)
-{
+void setFile(string filename) {
     assert(filename.size() != 0);
     Trips *t = new Trips(NULL, 0);
     t->setFilename(filename);
-    switch (filename[filename.length() - 1])
-    {
-    case 'p': // .cpp
-        t->runcpp();
-        break;
-    case '+': // .cpp
-        t->runcpp();
-        break;
-    case 'c': // .c
-        t->runc();
-        break;
-    case 's': // .rs
-        t->runrs();
-        break;
-    case 'y': //.py
-        t->runpy();
-        break;
-    case 'm': // yasm
-        t->runasm();
-        break;
-    default:
-        assert(false);
-        break;
+    switch (filename[filename.length() - 1]) {
+        case 'p':  // .cpp
+            t->runcpp();
+            break;
+        case '+':  // .cpp
+            t->runcpp();
+            break;
+        case 'c':  // .c
+            t->runc();
+            break;
+        case 's':  // .rs
+            t->runrs();
+            break;
+        case 'y':  //.py
+            t->runpy();
+            break;
+        case 'm':  // yasm
+            t->runasm();
+            break;
+        default:
+            assert(false);
+            break;
     }
 };
 
-void Trips::parse(void)
-{
+void Trips::parse(void) {
     string name = program_invocation_name;
     assert(Args != NULL);
-    switch (argCount)
-    {
-    case (2): {
-        if (strcmp(Args[1], "-h") == 0 || strcmp(Args[1], "--help") == 0)
-        {
-            printf("%s : run a main.[c,cpp,py,rs] file in currnet dir \n"
-                   "\n"
-                   " -h                  print this message\n"
-                   " %s [filename]       run the file(filename)\n"
-                   " %s                  look for a main.[c,cpp,py,rs]\n"
-                   "                     in current DIR and run it\n",
-                   name.c_str(), name.c_str(), name.c_str());
-            exit(0);
-        }
-        else if ((strstr(Args[1], ".py") != NULL) || (strstr(Args[1], ".cpp") != NULL) ||
-                 (strstr(Args[1], ".nasm") != NULL) || (strstr(Args[1], ".c") != NULL) ||
-                 (strstr(Args[1], ".rs") != NULL))
-        {
-            setFile(Args[1]);
-            return;
-        }
-        else
-        {
-            printf("%s invalid file passed\nTry %s -h for more info "
-                   "called\n",
+    switch (argCount) {
+        case (2): {
+            if (strcmp(Args[1], "-h") == 0 || strcmp(Args[1], "--help") == 0) {
+                printf(
+                    "%s : compile and run a main.[c,cpp,py,rs] file in currnet "
+                    "dir \n"
+                    "\n"
+                    " -h                  print this message\n"
+                    " %s [filename]       run the file(filename)\n"
+                    " %s                  look for a main.[c,cpp,py,rs]\n"
+                    "                     in current DIR and run it\n",
+                    name.c_str(), name.c_str(), name.c_str());
+                exit(0);
+            } else if ((strstr(Args[1], ".py") != NULL) ||
+                       (strstr(Args[1], ".cpp") != NULL) ||
+                       (strstr(Args[1], ".nasm") != NULL) ||
+                       (strstr(Args[1], ".c") != NULL) ||
+                       (strstr(Args[1], ".rs") != NULL)) {
+                setFile(Args[1]);
+                return;
+            } else {
+                printf(
+                    "%s invalid file passed\nTry %s -h for more info "
+                    "called\n",
+                    err, name.c_str());
+                exit(1);
+            }
+            break;
+        }  // case 2
+        default: {
+            printf("%s invalid file passed\nTry %s -h for more info called\n",
                    err, name.c_str());
             exit(1);
         }
-        break;
-    } // case 2
-    default: {
-        printf("%s invalid file passed\nTry %s -h for more info called\n", err, name.c_str());
-        exit(1);
-    }
     }
 };
 
-void Trips::runcpp()
-{
+void Trips::runcpp() {
     printf("compiling %s into outputfile : main\n", filename.c_str());
-    putsCommand(3, "g++ ", filename.c_str(), " -lfmt -g -std=c++2a --all-warnings -o main ");
+    appendToCommand(3, "g++ ", filename.c_str(),
+                    " -lfmt -g -std=c++2a --all-warnings -o main ");
     system(command.c_str());
     printf("======================================\n");
     exit(0);
 };
-void Trips::runpy()
-{
+void Trips::runpy() {
     printf("running %s\n============================\n", filename.c_str());
     string command = "python3 " + filename;
     system(command.c_str());
 
     exit(0);
 };
-void Trips::runasm()
-{
+void Trips::runasm() {
     printf("running %s using Fasm\n", filename.c_str());
     string command{"fasm " + filename};
 
     exit(0);
 };
 
-void Trips::runc()
-{
+void Trips::runc() {
     printf("compiling %s into outputfile : main\n", filename.c_str());
     string command = "gcc " + filename + " --all-warnings -g -std=c2x -o main ";
     system(command.c_str());
     printf("======================================\n");
     exit(0);
 };
-void Trips::runrs()
-{
+void Trips::runrs() {
     printf("compiling %s into outputfile : main\n", filename.c_str());
     string command = "rustc " + filename + " -o main ";
     system(command.c_str());
@@ -207,34 +193,24 @@ void Trips::runrs()
 };
 
 // find main.[c,rs,cpp,py,asm] in currnet dir
-[[nodiscard("name of file, if found")]] Findmain *findmain()
-{
+[[nodiscard("name of file, if found")]] Findmain *findmain() {
     string file{}, place{"."};
     DIR *d{};
     dirent *dir{};
     d = opendir(place.c_str());
-    if (d)
-    {
-        while ((dir = readdir(d)) != NULL)
-        {
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
             file = dir->d_name;
-            if (file == "main.c")
-            {
+            if (file == "main.c") {
                 return new Findmain("main.c", true);
                 closedir(d);
-            }
-            else if (file == "main.cpp")
-            {
+            } else if (file == "main.cpp") {
                 return new Findmain("main.cpp", true);
                 closedir(d);
-            }
-            else if (file == "main.py")
-            {
+            } else if (file == "main.py") {
                 return new Findmain("main.py", true);
                 closedir(d);
-            }
-            else if (file == "main.rs")
-            {
+            } else if (file == "main.rs") {
                 return new Findmain("main.rs", true);
                 closedir(d);
             }
@@ -244,25 +220,21 @@ void Trips::runrs()
     return new Findmain("", false);
 }
 
-int main(int argc, char **argv)
-{
-    if (argc == 1)
-    {
+int main(int argc, char **argv) {
+    if (argc == 1) {
         Findmain *found;
         found = findmain();
-        if (!found->found)
-        {
-            fprintf(stderr, "%s Could not find the a main.[c,cpp,rs,py] file to run\n", err);
-        }
-        else
-        {
+        if (!found->found) {
+            fprintf(stderr,
+                    "%s Could not find the a main.[c,cpp,rs,py] file to run\n",
+                    err);
+        } else {
             setFile(found->filename);
         }
         delete found;
         exit(0);
     }
-    if (argc >= 2)
-    {
+    if (argc >= 2) {
         Trips *t = new (std::nothrow) Trips(argv, argc);
         t->parse();
         return 0;

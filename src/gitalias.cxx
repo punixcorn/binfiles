@@ -9,19 +9,19 @@ Gitalias a git alias
 #include <boost/program_options/errors.hpp>
 #include <boost/program_options/value_semantic.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
 /* C++ includes */
 #include <filesystem>
-#include <format>
 #include <fstream>
-#include <ios>
 #include <iostream>
+#include <memory>
 #include <new>
-#include <numeric>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
-/*C includes*/
+/* C includes */
+#include <alloca.h>
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
@@ -54,6 +54,7 @@ using std::string, std::vector, std::string_view, std::cout, std::cerr,
 struct UserInfo {
     std::string token;
     std::string username;
+    std::string defaultMessage;
 };
 
 /* global varibales -> helps prevents extreme function arguments*/
@@ -68,10 +69,7 @@ struct Globals {
 
 struct Trips {
     Trips() { memset(this, 0, sizeof(*this)); };
-    ~Trips() {
-        memset(this, 0, sizeof(*this));
-        delete this;
-    };
+    ~Trips() { delete this; };
     bool commit, message, add, init, branch, switch_, deleteBranch, merge, pull,
         push, origin, log, status, repoName, repoDes, repoMode, verbose, Rreset,
         git;
@@ -160,7 +158,8 @@ int main(int argc, char *argv[]) {
             "Grab,G", opt::value<string>(),
             "grab a specific folder from a github repo")(
             "Visibility,V", opt::value<vector<string>>()->multitoken(),
-            "Modify the status of a repo[private,public]");
+            "Modify the status of a repo[private,public]")(
+            "Json,J", "List the Json Options");
 
         opt::variables_map args;
         opt::store(opt::command_line_parser(argc, argv)
@@ -460,10 +459,20 @@ int main(int argc, char *argv[]) {
                 exitWithoutHelp("could not resolve github link used\n");
             Isubcommand(G, " && ", grabstr);
         }
+        if (args.count("Json")) {
+            fmt::print(
+                "================================================\n"
+                "                JSON options                    \n"
+                "username        : your username\n"
+                "token           : your gitHub Token\n"
+                "default_message : a default commit message\n"
+                "================================================\n");
+        }
     } catch (const opt::error &ex) {
         cerr << program_invocation_name << ": " << ex.what() << "\n";
         exit(1);
     }
+
     try {
         parse(G, T);
     } catch (...) {
@@ -473,8 +482,6 @@ int main(int argc, char *argv[]) {
     }
     exit(0);
 }
-
-/*===== End of Main =======*/
 
 auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
     -> void {
@@ -525,7 +532,8 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
             FileToWorkWith << fmt::format(
                 "{{\n"
                 "\"username\":\"YOUR_GITHUB_USERNAME\",\n"
-                "\"token\" : \"YOUR_GITHUB_TOKEN\"\n"
+                "\"token\" : \"YOUR_GITHUB_TOKEN\",\n"
+                "\"default_message\" : \"DEFAULT COMMIT MESSAGE\"\n"
                 "}}\n");
         } else {
             fmt::print("error with opened file\n");
@@ -548,6 +556,13 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
             boost::property_tree::read_json(filename, pt);
             userinfo.username = pt.get<std::string>("username");
             userinfo.token = pt.get<std::string>("token");
+            // userinfo.defaultMessage is not compulsory
+            try {
+                userinfo.defaultMessage =
+                    pt.get<std::string>("default_message");
+            } catch (...) {
+                userinfo.defaultMessage = "";
+            }
         } catch (const boost::wrapexcept<
                  boost::property_tree::json_parser::json_parser_error> &ex) {
             fmt::print("{}", ex.what());
@@ -809,7 +824,13 @@ auto parse(Globals *g, Trips *t) -> void {
             exitWithoutHelp("Err: used commit in --git and --commit together");
         /* if not message trip  */
         if (!t->message) {
-            g->messagebox = " -m 'made some changes' ";
+            std::string commitMessage = ParseUserInfo().defaultMessage;
+            if (commitMessage == "DEFAULT COMMIT MESSAGE")
+                commitMessage.clear();
+
+            g->messagebox = commitMessage.size() == 0
+                                ? " -m 'made some changes' "
+                                : fmt::format("-m '{}' ", commitMessage);
         }
         /* if not add trip */
         if (!t->add) {

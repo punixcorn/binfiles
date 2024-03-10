@@ -24,9 +24,6 @@ target_link_libraries(
                           -static)
 
 target_link_libraries(
-   makehere PRIVATE fmt::fmt-header-only
-                          -static)
-target_link_libraries(
    msd PRIVATE fmt::fmt-header-only
                           -static)
 
