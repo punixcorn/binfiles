@@ -24,12 +24,12 @@ _gitalias_completions() {
 	))
 }
 
-_makehere_completions() {
+_cstrap_completions() {
 	COMPREPLY+=($(compgen -W "-h --help  -l  --language -c --compiler -f --filename -std --standard  -t --template" "${COMP_WORDS[1]}" 2>/dev/null))
 }
 
 _msd_completions() {
-	COMPREPLY+=($(compgen -W "-h -lsblk" "${COMP_WORDS[1]}" 2>/dev/null))
+	COMPREPLY+=($(compgen -W "-h --help --place -p --device -d --umount -u" "${COMP_WORDS[1]}" 2>/dev/null))
 }
 
 _setHdmi_completions() {
@@ -41,9 +41,8 @@ _ff_completions() {
 }
 
 complete -F _gitalias_completions gitalias
-complete -F _makehere_completions makehere
+complete -F _cstrap_completions cstrap
 complete -F _msd_completions msd
-complete -F _msd_completions umsd
 complete -F _helper_completion runmain
 complete -F _setHdmi_completions setHdmi
 complete -F _ff_completions ff
