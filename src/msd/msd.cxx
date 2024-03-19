@@ -36,7 +36,7 @@
 using namespace fmt;
 using namespace fmt;
 
-#include "engine.hpp"
+#include "../engine/engine.hpp"
 #define null NULL
 #define check_null(var, msg) \
     if (var == null) {       \
@@ -61,7 +61,7 @@ struct dir_t : public device_t {
     std::string umount_dir_t;
 };
 
-class Parser : public Engine {
+class Parser : public binfiles::Engine {
    private:
     int Argc;
     char **Argv;
@@ -69,7 +69,8 @@ class Parser : public Engine {
    public:
     Parser(int argc, char **argv);
 
-    // if passed in as device_name instead of /dev/device_name, fix it
+    /* if passed in as device_name instead of /dev/device_name, fix it to
+    /dev/device_name */
     void make_device_path_absolute(std::string &device_name) {
         if (device_name.find("/dev/") == std::string::npos) {
             std::string temp{device_name};
@@ -78,7 +79,7 @@ class Parser : public Engine {
         };
     }
 
-    //  returns true if both disk and place where found
+    /*  returns true if both disk and place where found in path */
     bool setDeviceAndDir(std::vector<std::string> params, std::string &place,
                          std::string &disk) {
         if (params.size() != 2) return false;
@@ -158,7 +159,7 @@ class Parser : public Engine {
                             "<dir>\n"
                             "-h,--help                    print this message\n"
                             "-p,--place <dir>             place to mount"
-                            "<dir>\n"
+                            "\n"
                             "-d,--device <device>         device to mount\n"
                             "-u,--umount <dir>            unmount device from "
                             "mount point <dir>\n");
@@ -315,7 +316,7 @@ class Parser : public Engine {
     }  // parse
 };
 
-Parser::Parser(int argc, char **argv) : Engine(argc, argv) {
+Parser::Parser(int argc, char **argv) : Engine() {
     assert(argv != null);
     assert(argc > 0);
     Argc = argc;
