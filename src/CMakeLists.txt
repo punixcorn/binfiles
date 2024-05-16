@@ -3,11 +3,9 @@ project(binfiles)
 add_executable(gitalias gitalias.cxx)
 add_executable(makehere makehere.cxx)
 add_executable(msd msd.cxx)
-add_executable(umsd umsd.c)
 
 # finally made fmt static
 set_target_properties(gitalias makehere msd PROPERTIES CXX_STANDARD 23)
-set_target_properties(umsd PROPERTIES C_STANDARD 23)
 
 # options
 set(CMAKE_CXX_STANDARD_REQUIRED true)
