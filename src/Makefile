@@ -29,5 +29,6 @@ run:
 
 clean:
 	@echo "cleaning..."
-	@rm *.o 
-	@rm $(OUTPUT)
+	@touch a.o $(OUTPUT)
+	@rm *.o  $(OUTPUT)
+	@rm -rf bin build 
