@@ -2,7 +2,9 @@ Aegukga
 src/gitalias/build/ 
 src/gitalias/bin/
 src/makehere/build/ 
-src/makehere/build/ 
+src/makehere/bin/
+src/makezip/bin/
+src/makezip/build
 src/build/ 
 src/bin/
 src/cli

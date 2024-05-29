@@ -1,12 +1,10 @@
-#include <fmt/core.h>
-#include <fmt/format.h>
-
 #include <algorithm>
-#include <iostream>
+#include <format>
+#include <print>
 #include <string>
 #include <vector>
 
-using fmt::print, fmt::format, std::string, std::vector;
+using std::print, std::format, std::string, std::vector;
 
 // this class is inherited and void parse(){} is developed in other files
 struct Engine {
@@ -17,7 +15,7 @@ struct Engine {
 
     Engine(int argc, char **argv) : Argc(argc), Argv(argv) {
         if (argc <= 1) {
-            fmt::print("Error Invalid arguments passed\n");
+            std::print("Error Invalid arguments passed\n");
             exit(1);
         }
     };
@@ -28,9 +26,9 @@ struct Engine {
 
     // debug outputs argc, and argv
     void dedug_argc_argv() {
-        fmt::print("argc {}\n", Argc);
+        std::print("argc {}\n", Argc);
 
-        fmt::print("Argv\n");
+        std::print("Argv\n");
 
         auto collect = [](char **a) {
             vector<string> t{};
@@ -43,7 +41,7 @@ struct Engine {
         };
         vector<std::string> t = collect(Argv);
         for (const auto s : t) {
-            fmt::print("- {}\n", s);
+            std::print("- {}\n", s);
         }
     }
 
@@ -51,13 +49,13 @@ struct Engine {
      */
     /* { */
 
-    /*     fmt::print("{}\n", arg); */
+    /*     std::print("{}\n", arg); */
     /*     debug(args...); */
     /* } */
 
     // terminates progream with str as error messsage and status as return value
     void ERR(string str, int status = 1) {
-        fmt::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
+        std::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
         exit(status);
     }
 

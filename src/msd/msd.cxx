@@ -6,10 +6,8 @@
  *******************************************************************
  */
 
-// libfmt
-#include <fmt/core.h>
-#include <fmt/format.h>
-
+#include <format>
+#include <print>
 // mount syscall
 #include <unistd.h>
 
@@ -33,10 +31,7 @@
 #include <typeinfo>
 #include <vector>
 
-using namespace fmt;
-using namespace fmt;
-
-#include "engine.hpp"
+#include "../engine/engine.hpp"
 #define null NULL
 #define check_null(var, msg) \
     if (var == null) {       \
@@ -74,7 +69,7 @@ class Parser : public Engine {
         if (device_name.find("/dev/") == std::string::npos) {
             std::string temp{device_name};
             device_name.clear();
-            device_name = fmt::format("/dev/{}", temp);
+            device_name = std::format("/dev/{}", temp);
         };
     }
 
@@ -92,11 +87,11 @@ class Parser : public Engine {
         }
 
         // check which is /dev/device
-        if (std::filesystem::exists(fmt::format("{}{}", dev_path, params[0]))) {
+        if (std::filesystem::exists(std::format("{}{}", dev_path, params[0]))) {
             disk = params[0];
             place = params[1];
         } else if (std::filesystem::exists(
-                       fmt::format("{}{}", dev_path, params[1]))) {
+                       std::format("{}{}", dev_path, params[1]))) {
             disk = params[1];
             place = params[0];
         } else {
@@ -207,19 +202,19 @@ class Parser : public Engine {
 
         if (dir.umount_t && dir.umount_dir_t.length() > 0) {
             if (!std::filesystem::exists(dir.umount_dir_t)) {
-                ERR(fmt::format("could not resolve path for --umount {}",
+                ERR(std::format("could not resolve path for --umount {}",
                                 dir.umount_dir_t));
             }
 #ifdef umount_syscall_dev
             setuid(0);
             int umount_t = umount2(dir.umount_dir_t.c_str(), MNT_FORCE);
             if (umount_t == -1) {
-                ERR(fmt::format("Error occured with umount\n{}\n",
+                ERR(std::format("Error occured with umount\n{}\n",
                                 strerror(errno)));
             }
 #endif
             std::string temp =
-                fmt::format("sudo umount {}  -f -l -v", dir.umount_dir_t);
+                std::format("sudo umount {}  -f -l -v", dir.umount_dir_t);
 
             std::system(temp.c_str());
 #ifdef execv_dev
@@ -229,12 +224,12 @@ class Parser : public Engine {
                 int execvi = execvp("bash", argv);
 
                 if (execvi == -1) {
-                    ERR(fmt::format("ERR OCCURED\n{}\n", strerror(errno)));
+                    ERR(std::format("ERR OCCURED\n{}\n", strerror(errno)));
                     exit(1);
                 }
             }
 #endif
-            fmt::print("{} umounted\n", dir.umount_dir_t);
+            std::print("{} umounted\n", dir.umount_dir_t);
             if ((nonParamCount < 2) && (!dev.paramSet && !dir.paramSet)) {
                 exit(1);
             }
@@ -275,13 +270,13 @@ class Parser : public Engine {
         }
 
         if (!std::filesystem::exists(dir.data)) {
-            ERR(fmt::format("DIR {} not found try using absolute path\n",
+            ERR(std::format("DIR {} not found try using absolute path\n",
                             dir.data));
         }
 
         if (!std::filesystem::exists(dev.data)) {
             ERR(
-                fmt::format("device file {} not found\n"
+                std::format("device file {} not found\n"
                             "check mount points\n",
                             dir.data));
         }
@@ -296,7 +291,7 @@ class Parser : public Engine {
 #endif
 
         std::string temp =
-            fmt::format("sudo mount  -o umask=000 {} {}", dev.data, dir.data);
+            std::format("sudo mount  -o umask=000 {} {}", dev.data, dir.data);
         std::system(temp.c_str());
 #ifdef execv_dev
         char *const argv[] = {(char *const)"bash", (char *const)"-c",
@@ -305,11 +300,11 @@ class Parser : public Engine {
         if (fork() == 0) {
             int execvi = execvp("bash", argv);
             if (execvi == -1) {
-                ERR(fmt::format("ERR OCCURED\n{}\n", strerror(errno)));
+                ERR(std::format("ERR OCCURED\n{}\n", strerror(errno)));
                 exit(1);
             }
         } else {
-            fmt::print("{} mounted at {}\n", dev.data, dir.data);
+            std::print("{} mounted at {}\n", dev.data, dir.data);
         }
 #endif
     }  // parse
@@ -327,10 +322,10 @@ int main(int argc, char *argv[], char **envp) {
         Parser e(argc, argv);
         e.parse();
     } catch (const std::logic_error e) {
-        fmt::print("Parser failed\n info {}\n", e.what());
+        std::print("Parser failed\n info {}\n", e.what());
         throw std::logic_error(e);
     } catch (const std::bad_cast e) {
-        fmt::print("bad cast\n");
+        std::print("bad cast\n");
         throw std::bad_cast(e);
     }
     return 0;

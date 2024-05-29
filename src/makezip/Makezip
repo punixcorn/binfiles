@@ -1,0 +1,15 @@
+z.zip: add 
+    z1
+    z2
+    z3
+
+f.zip: delete
+    f1
+    f2
+    f3
+
+#all.zip: 
+#    f1
+#    f.zip
+#    z.zip
+#    
