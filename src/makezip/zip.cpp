@@ -1,6 +1,6 @@
 #include "zip.h"
 
-#include <format>
+#include <zip.h>
 
 #include "Makezip.h"
 #include "defines.h"
@@ -100,7 +100,7 @@ bool deleteFilefromZip(zip_t *z, const char *name, const char *zipname...) {
     if (index == -1) {
         std::print(stderr, "file {} not found in {}", name, zipname);
     }
-    zip_get_num_entries(z, index);
+    zip_delete(z, index);
     return true;
 };
 
