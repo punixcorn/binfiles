@@ -13,6 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install GCC 14
+      run: |
+        sudo apt-get update
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe" 
+        sudo apt-get install -y gcc-14 
     - name: Install Boost dependencies
       run: |
         sudo apt-get update
