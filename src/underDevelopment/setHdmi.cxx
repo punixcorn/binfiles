@@ -58,7 +58,8 @@ char *getbuffer() {
 
 typedef enum { normal_exit, help_exit } exit_mode;
 
-auto Exit(char *program_name, exit_mode mode) -> void {
+auto Exit(exit_mode mode, char *program_name = program_invocation_name)
+    -> void {
     if (mode == normal_exit) {
         fprintf(stderr,
                 "Invalid arguments passed\ntry %s --help for more information",
@@ -116,8 +117,7 @@ void setup(const int argc, char **argv, int *index, const arg_size op) {
             break;
         case 'H':
             *index += 1;
-            if (!isNotOption(argv[*index])) Exit(argv[0], 1);
-
+            if (!isNotOption(argv[*index])) Exit(exit_mode::normal_exit);
             Io.Hdmisize = argv[*index];
 
             if (Io.Hdmisize == NULL) {
@@ -133,7 +133,7 @@ void setup(const int argc, char **argv, int *index, const arg_size op) {
             break;
         case 'p':
             *index += 1;
-            if (!isNotOption(argv[*index])) Exit(argv[0], 1);
+            if (!isNotOption(argv[*index])) Exit(exit_mode::normal_exit);
 
             Io.place = argv[*index];
             if (Io.place == NULL) {
@@ -143,7 +143,7 @@ void setup(const int argc, char **argv, int *index, const arg_size op) {
 
             break;
         case 'h':
-            Exit(argv[0], 2);
+            Exit(help_exit);
             break;
         case 'o':
             if (strstr(offbuffer,
@@ -159,7 +159,7 @@ void setup(const int argc, char **argv, int *index, const arg_size op) {
             exit(0);
             break;
         default:
-            Exit(argv[0], 1);
+            Exit(1);
             break;
     }
 }

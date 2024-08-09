@@ -44,9 +44,8 @@ _makezip_completions() {
 }
 
 complete -F _gitalias_completions gitalias
-complete -F _makehere_completions cstrap
+complete -F _cstrap_completions cstrap
 complete -F _msd_completions msd
-complete -F _msd_completions umsd
 complete -F _helper_completion runmain
 complete -F _setHdmi_completions setHdmi
 complete -F _ff_completions ff

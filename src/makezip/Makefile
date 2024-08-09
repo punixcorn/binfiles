@@ -7,7 +7,7 @@ clean:
 	rm -rf bin/
 
 debug:
-	g++ main.cpp Makezip.cpp zip.cpp errormessage.cpp -lboost_program_options -lboost_system -lboost_exception -lzip -ggdb -o main -std=c++26
+	g++ main.cpp Makezip.cpp zip.cpp errormessage.cpp -lzip -ggdb -o main -std=c++26
 
 run:
 	@./bin/makezip 

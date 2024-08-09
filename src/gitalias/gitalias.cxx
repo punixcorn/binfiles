@@ -3,6 +3,13 @@ Copyright 2023 punixcorn
 Gitalias a git alias
 */
 
+/* new todo:
+ * - push only one branch instead of all : git push -u origin branch
+ * - fix grabbing files from curl
+ * - move to libgit
+ * - suggestive autocompelete
+ */
+
 /* boost includes */
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
@@ -57,8 +64,8 @@ struct UserInfo {
 
 /* global varibales -> helps prevents extreme function arguments*/
 struct Globals {
-    Globals(){};
-    ~Globals(){};
+    Globals() {};
+    ~Globals() {};
     string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
         command = "[ -f /bin/git ] ";
     bool mode; /* user request mode */
@@ -85,9 +92,8 @@ auto getGitInfo() -> bool;
 /* check for staged files */
 auto checkStaged() -> bool;
 /* check is thing exists at place */
-[[nodiscard("if file exists in place")]] auto findFile(const string &place,
-                                                       const string_view &file)
-    -> bool;
+[[nodiscard("if file exists in place")]] auto findFile(
+    const string &place, const string_view &file) -> bool;
 /*finds config file and returns Json vaules about the user*/
 [[nodiscard("grab UserInfo from file")]] auto ParseUserInfo() -> UserInfo;
 /* create an online repository */
@@ -486,8 +492,8 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
-    -> void {
+auto Isubcommand(Globals *g, const string_view &s1,
+                 const string_view &s2) -> void {
     g->subcommand += s1;
     if (s2.length() != 0) g->subcommand += s2;
 }

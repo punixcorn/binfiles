@@ -44,7 +44,7 @@ struct Engine {
     string standard;
 
    public:
-    Engine(char **argv, int argc) : Args(argv), Argc(argc){};
+    Engine(char **argv, int argc) : Args(argv), Argc(argc) {};
 
     void ERR(string str, int status = 1) {
         std::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
@@ -64,9 +64,9 @@ struct Engine {
         return false;
     };
 
-    void createFile(std::string File, std::string inputFormat) {
+    void createFile(std::string File, std::string fileContents) {
         std::ofstream fileStream(std::format("./{}/{}", project, File));
-        fileStream << inputFormat;
+        fileStream << fileContents;
         fileStream.close();
     }
 
@@ -92,7 +92,7 @@ struct Engine {
             "CompileFlags:\n"
             "\tAdd: [ -std={}{} ]\n",
             (language == "c" ? "c" : "c++"), standard);
-
+        createFile(".clangd", str);
     };  // Buildclangd
 
     void buildMake() {
@@ -113,7 +113,7 @@ struct Engine {
                         "main.o: ${{FILE}}\n"
                         "\t$(CC) -c ${{FILE}} ${{STD}} ${{FLAGS}} -o main.o\n\n"
                         "run: main\n"
-                        "\t@echo'========================================'\n"
+                        "\t@echo '========================================'\n"
                         "\t@./main\n\n"
                         "clean:\n"
                         "\t@touch main.o main\n"
@@ -126,6 +126,11 @@ struct Engine {
     };  // buildMake
 
     void buildCmake() {
+        std::string cmake_standard{};
+        if (standard == "2x" || standard == "2a") {
+            cmake_standard = "23";
+        }
+
         std::string cmakestr{std::format(
             "cmake_minimum_required(VERSION 3.5)\n"
             "project({0})\n"
@@ -137,7 +142,8 @@ struct Engine {
             "#target_link_libraries(${{PROJECT_NAME}} PRIVATE "
             "std::std-header-only -static)\n"
             "set(EXECUTABLE_OUTPUT_PATH ${{CMAKE_SOURCE_DIR}}/bin)\n",
-            project, filename, (language == "c" ? "C" : "CXX"), standard)};
+            project, filename, (language == "c" ? "C" : "CXX"),
+            cmake_standard)};
 
         std::string make_for_cmake = std::format(
             "CC=cmake\n"
@@ -286,9 +292,17 @@ struct Engine {
         if (standard != "11" || standard != "14" || standard != "17" ||
             standard != "20" || standard != "99" || standard != "23") {
             if (language == "c") {
-                standard = "23";
+                standard = "2x";
             } else {
-                standard = "23";
+                standard = "2a";
+            }
+        }
+
+        if (standard == "23") {
+            if (language == "c") {
+                standard = "2x";
+            } else {
+                standard = "2a";
             }
         }
 
@@ -327,13 +341,14 @@ struct Engine {
             } else {
                 createFile(filename,
                            std::format("/*\n"
-                                       "project: {} \n"
-                                       "author: \n"
+                                       "\tproject: {} \n"
+                                       "\tauthor: \n"
                                        "*/\n"
-                                       "#include<stdio.h>\n"
+                                       "#include <stdio.h>\n"
                                        "int main(int argc,char ** argv){{\n"
+                                       "printf(\"project : {}\\n\");\n"
                                        "return 0;\n}}\n",
-                                       project));
+                                       project, project));
             }
         } else  //  check for template file for cpp
         {
@@ -344,13 +359,14 @@ struct Engine {
             } else {
                 createFile(filename,
                            std::format("/*\n"
-                                       "project: {}\n"
-                                       "author: \n"
+                                       "\tproject: {}\n"
+                                       "\tauthor: \n"
                                        "*/\n"
-                                       "#include<iostream>\n"
+                                       "#include <iostream>\n"
                                        "int main(int argc,char ** argv){{\n"
+                                       "std::cout << \"project : {}\\n\";\n"
                                        "return 0;\n}}\n",
-                                       project));
+                                       project, project));
             }
         }
 
@@ -377,7 +393,7 @@ struct Engine {
             project, language, filename, compiler, standard);
         exit(0);
     }  // void Parse
-};     // Engine
+};  // Engine
 
 int main(int argc, char **argv) {
     Engine e(argv, argc);

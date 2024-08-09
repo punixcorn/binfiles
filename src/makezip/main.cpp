@@ -15,12 +15,13 @@
 
     + modify zip files if exists not replace
     - no point in modifing, just replace
+    - but can skipp adding
 
     + more configs
  */
+
 int main(int argc, char **argv) {
     alltargets T;
-    zip_entries_t zip_entries;
     std::stringstream *buffer;
 
     buffer = getMakeZipContents(null);
@@ -47,7 +48,18 @@ int main(int argc, char **argv) {
                          1);
         }
     }
-    makezip(T, zip_entries);
+    zzip::makezip(T);
 
-    return 0;
+    /* zip_t *z = zzip::init("z.zip"); */
+    /* time_t t = zzip::getFileModifiedTime(z, "defines.h"); */
+
+    /* if (t == 0) { */
+    /*     return -1; */
+    /* } */
+
+    /* std::print("main.cpp -> {}\n", ctime(&t)); */
+    /* printf(" File access time %s", ctime(&filestat.st_atime)); */
+    /* printf(" File modify time %s", ctime(&filestat.st_mtime)); */
+    /* printf("File changed time %s", ctime(&filestat.st_ctime)); */
+    /* return 0; */
 }

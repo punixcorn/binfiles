@@ -38,6 +38,7 @@ void syntaxerror(int line, std::string& err, std::string&& extrainfo);
 void printallTargets(alltargets& T);
 void findMakezip();
 std::stringstream* getMakeZipContents(char* buffer, ...);
+const alltargets orderTargets(const alltargets& T, ...);
 void grabTargetsfiles(std::string& line, std::stringstream* buffer,
                       int& currentlinenumber, std::string& errline, target& t);
 void removeWhiteSpaceAround(std::string& str);
