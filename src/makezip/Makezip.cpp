@@ -88,6 +88,11 @@ void grabTargetsfiles(std::string& line, std::stringstream* buffer,
     }
 }
 
+const alltargets orderTargets(const alltargets& T, ...) {
+    
+    return T;
+}
+
 /*
  * parses all the targets into a vector of targets
  * @rules

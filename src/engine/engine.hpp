@@ -89,6 +89,6 @@ struct Engine {
     }
 
     // custom funtion to parse Argv and Argc
-    void parse(){};
+    void parse(void) {};
 
 };  // void Parse

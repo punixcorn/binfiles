@@ -47,7 +47,7 @@ struct device_t {
     bool paramSet{false};
     std::string data;
     device_t(const bool isParmaSet = false, std::string Data = "")
-        : paramSet(isParmaSet), data(Data){};
+        : paramSet(isParmaSet), data(Data) {};
     device_t(device_t &&dev) = default;
 };
 

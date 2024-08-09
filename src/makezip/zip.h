@@ -12,11 +12,18 @@
 // #include <boost/property_tree/json_parser.hpp>
 
 /* c++ libs */
+#include <dirent.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <zip.h>
+
+#include <ctime>
 #include <filesystem>
 #include <format>
 #include <map>
 #include <print>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "Makezip.h"
@@ -25,23 +32,28 @@
 using zip_entries_t = std::map<int, std::string>;
 
 /*================================================*/
+namespace zzip {
 
-zip_t *init_zip(const char *path, int flags = ZIP_RDONLY);
+zip_t *init(const char *path, int flags = ZIP_RDONLY);
 
 /* info on zip file */
-void *readbytesfromzip(zip_t *zip, const char *filename, int size,
-                       uint64_t readsize, ...);
-std::map<int, std::string> getfilesandindexinzip(zip_t *zip, ...);
+void *readBytes(zip_t *zip, const char *filename, int size, uint64_t readsize,
+                ...);
+bool fileExists(zip_t *zip, const char *filename, ...);
+zip_entries_t getEntries(zip_t *zip, ...);
 void printZipInfo(zip_t *zip, ...);
-void printZipFiles(zip_t *zip, ...);
-void printZip(zip_t *zip, ...);
-time_t getfileModifiedTime(zip_t *zip, const char *filename, ...);
+void printFiles(zip_t *zip, ...);
+void printEntries(zip_t *zip, ...);
+time_t getFileModifiedTime(zip_t *zip, const char *filename, ...);
 
 /* modify zip */
-void addFileToZip(zip_t *zip, const char *filename, zip_entries_t &zip_entries,
-                  ...);
-void addFiletoZip(zip_t *zip, const char *filename, ...);
-bool deleteFilefromZip(const char *name, ...);
-void makezip(const alltargets &T, zip_entries_t &zip_entries);
+void addFile(zip_t *zip, const char *filename, zip_entries_t &zip_entries, ...);
+void addFile(zip_t *zip, const char *filename, ...);
+void addDirectory(zip_t *zip, const char *dirname, ...);
+bool deleteFile(zip_t *z, const char *name, ...);
+// this will add dir or file
+void add(zip_t *zip, const char *name, ...);
+void makezip(const alltargets &T, ...);
+}  // namespace zzip
 /*================================================*/
 #endif

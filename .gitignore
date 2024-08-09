@@ -16,4 +16,6 @@ src/backup
 src/Todo.md
 src/a.out
 src/cmain.o
-
+src/makezip/test/
+src/makezip/libzip
+docs/
