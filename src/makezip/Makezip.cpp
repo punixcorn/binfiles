@@ -1,6 +1,19 @@
 #include "Makezip.h"
 
+#include <filesystem>
+
 #include "errormessage.h"
+
+#if __cplusplus <= 202002L
+namespace std {
+void print(std::string, ...);
+void print(FILE*, std::string, ...);
+namespace filesystem {
+bool exists(...);
+}
+}  // namespace std
+
+#endif
 
 /*
  * output each target and it targets
@@ -88,10 +101,7 @@ void grabTargetsfiles(std::string& line, std::stringstream* buffer,
     }
 }
 
-const alltargets orderTargets(const alltargets& T, ...) {
-    
-    return T;
-}
+const alltargets orderTargets(const alltargets& T, ...) { return T; }
 
 /*
  * parses all the targets into a vector of targets

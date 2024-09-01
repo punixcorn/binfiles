@@ -7,7 +7,11 @@ Gitalias a git alias
  * - push only one branch instead of all : git push -u origin branch
  * - fix grabbing files from curl
  * - move to libgit
- * - suggestive autocompelete
+ * - suggestive autocompelete [done]
+ * - remove --git ( no apparent use, this tool solves the DRY use of git not
+ * replace it )
+ * - use default username when cloneing a repo
+ * - make use of full c++ , remove more C stuff
  */
 
 /* boost includes */
@@ -789,7 +793,7 @@ auto createOnlineRepo(Globals *g) -> void {
 auto gitalias_main(Globals *g, bool v) -> void {
     if (g->subcommand.length()) g->command += g->subcommand;
     if (v) {
-        cout << "gitalias V2.6.0\nRunning Command:\n" << g->command << endl;
+        cout << "gitalias V2.6.5-dev\nRunning Command:\n" << g->command << endl;
     }
     system(g->command.c_str());
     exit(0);

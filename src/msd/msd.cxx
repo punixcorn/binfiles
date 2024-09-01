@@ -3,7 +3,12 @@
  * rewrites
  * 1 syscall_mount_dev = pure syscalls, fails because of portability
  * 2 execv_dev = execv* syscall, fails because sudo has IO errors
+ *
  *******************************************************************
+
+ Add / Fixes
+ *******************************************************************
+ 1. --mount, to mount by default at /mnt
  */
 
 #include <format>
