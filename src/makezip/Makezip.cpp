@@ -174,7 +174,7 @@ void* parseMakezip(std::stringstream* buffer, alltargets& T) {
 
                 if (config.find(' ') != std::string::npos) {
                     ERR::syntaxerror(currentlinenumber, errline,
-                                     std::format("Invalid config for target "
+                                     fmt::format("Invalid config for target "
                                                  "Header {}{}{}",
                                                  green, t.targetName, nocol));
                 }
