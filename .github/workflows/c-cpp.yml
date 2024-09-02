@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
     - name: Install GCC 14
       run: |
         sudo apt-get update
         sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
         sudo apt-get install -y gcc-14
-    - name: Install Boost dependencies and libfmt
+    - name: Install Boost dependencies and libfmt and zip
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libboost-all-dev libfmt-dev
+        sudo apt-get install -y build-essential libboost-all-dev libfmt-dev libzip-dev
     - name: Compile
       run: cd src && make
