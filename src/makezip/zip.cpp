@@ -16,7 +16,7 @@ zip_t *zzip::init(const char *path, int flags) {
     if ((zip = zip_open(path, flags, &err)) == null) {
         zip_error_t error;
         zip_error_init_with_code(&error, err);
-        std::print(stderr, "could not open zip\n{}",
+        fmt::print(stderr, "could not open zip\n{}",
                    zip_error_strerror(&error));
         zip_error_fini(&error);
         exit(-1);
@@ -39,17 +39,17 @@ void zzip::printFiles(zip_t *zip, ...) {
         if (name == null) {
             break;
         }
-        std::print("{} ", name);
+        fmt::print("{} ", name);
     }
-    std::print("\n");
+    fmt::print("\n");
 }
 
 void zzip::printEntries(zip_t *zip, ...) {
     std::map<int, std::string> mp = zzip::getEntries(zip);
     for (auto i : zzip::getEntries(zip)) {
-        std::print("{} : {}\n", i.first, i.second);
+        fmt::print("{} : {}\n", i.first, i.second);
     }
-    std::print("\n");
+    fmt::print("\n");
 }
 
 bool zzip::fileExists(zip_t *zip, const char *filename, ...) {
@@ -76,18 +76,18 @@ zip_entries_t zzip::getEntries(zip_t *zip, ...) {
 
 void zzip::addDirectory(zip_t *zip, const char *dirname, ...) {
     if (!std::filesystem::is_directory(dirname)) {
-        ERR::exitErr(std::format("directory {} not found", dirname));
+        ERR::exitErr(fmt::format("directory {} not found", dirname));
     }
 
     zip_dir_add(zip, dirname, 0);
     // open dir/ add files
     for (const auto &entry : std::filesystem::directory_iterator(dirname)) {
-        std::print("{}\n", entry.path().string());
+        fmt::print("{}\n", entry.path().string());
     }
 
     exit(0);
 
-    zzip::addFile(zip, std::format("{}/{}", dirname, dirname).c_str());
+    zzip::addFile(zip, fmt::format("{}/{}", dirname, dirname).c_str());
 }
 
 void zzip::addFile(zip_t *zip, const char *filename, zip_entries_t &zip_entries,
@@ -114,7 +114,7 @@ void zzip::addFile(zip_t *zip, const char *filename, ...) {
     int index = zip_file_add(zip, filename, s, ZIP_FL_OVERWRITE);
     zip_source_close(s);
     if (index == -1) {
-        ERR::exitErr(std::format("Could not add file {}", filename), index);
+        ERR::exitErr(fmt::format("Could not add file {}", filename), index);
     }
 }
 
@@ -138,7 +138,7 @@ bool zzip::deleteFile(zip_t *z, const char *name, ...) {
     if (index == -1) {
         return false;
 #ifdef debug
-        std::print(stderr, "file {} not found in {}", name, zipname);
+        fmt::print(stderr, "file {} not found in {}", name, zipname);
 #endif
     }
 
@@ -170,15 +170,15 @@ void zzip::makezip(const alltargets &tempT, ...) {
 
         //  add a '*D' or '*A' to show if archive should be deleteing or adding
         std::string INS = target.ops == INS_ADD
-                              ? std::format("{}{}*A{}", bold, green, nocol)
-                              : std::format("{}{}*D{}", bold, red, nocol);
-        std::print("{}[archive]{} : {} {}\n", bold, nocol, target.targetName,
+                              ? fmt::format("{}{}*A{}", bold, green, nocol)
+                              : fmt::format("{}{}*D{}", bold, red, nocol);
+        fmt::print("{}[archive]{} : {} {}\n", bold, nocol, target.targetName,
                    INS);
 
         for (const auto &files : target.targets) {
             if (target.ops == INS_ADD) {  // adding file
-                if (!std::filesystem::exists(std::format("./{}", files))) {
-                    ERR::exitErr(std::format("{} not found\n", files), 2);
+                if (!std::filesystem::exists(fmt::format("./{}", files))) {
+                    ERR::exitErr(fmt::format("{} not found\n", files), 2);
                 };
                 // check modified time before adding file
                 struct stat filestat;
@@ -195,26 +195,26 @@ void zzip::makezip(const alltargets &tempT, ...) {
 #endif
 
                 if (TimeDiff <= 5) {
-                    std::print("\t{}{}*{} {} {}[no changes]{}\n", bold, yellow,
+                    fmt::print("\t{}{}*{} {} {}[no changes]{}\n", bold, yellow,
                                nocol, files, bold, nocol);
                 } else {
                     zzip::add(z, files.c_str());
-                    std::print("\t{}{}+{} {}\n", bold, green, nocol, files);
+                    fmt::print("\t{}{}+{} {}\n", bold, green, nocol, files);
                 }
 
             } else if (target.ops == INS_DEL) {  // deleteing file
                 // check if zip to delete from exists
                 if (!std::filesystem::exists(
-                        std::format("./{}", target.targetName))) {
+                        fmt::format("./{}", target.targetName))) {
                     ERR::exitErr(
-                        std::format("zip {} not found\n", target.targetName),
+                        fmt::format("zip {} not found\n", target.targetName),
                         2);
                 };
                 // checking if file is in zip before delete
                 if (zzip::deleteFile(z, files.c_str())) {
-                    std::print("\t{}{}-{} {}\n", bold, red, nocol, files);
+                    fmt::print("\t{}{}-{} {}\n", bold, red, nocol, files);
                 } else {
-                    std::print("\t{}{}*{} {} {}[not found]{}\n", bold, yellow,
+                    fmt::print("\t{}{}*{} {} {}[not found]{}\n", bold, yellow,
                                nocol, files, bold, nocol);
                 }
             }

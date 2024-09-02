@@ -15,11 +15,13 @@
 #COMPREPLY = a var used to store completions
 
 __gitalias_completions() {
-    local curr_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    local branches=$(git branch 2>/dev/null | sed -e "s/\n//g" -e "s/ //g" -e "s/*//g" 2>/dev/null)
-    local other_branches=$(git branch 2>/dev/null | sed -e "s/\n//g" -e "s/ //g" -e "s/\*.*//g" 2>/dev/null)
+    if [ -d .git ]; then
+        local curr_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+        local branches=$(git branch 2>/dev/null | sed -e "s/\n//g" -e "s/ //g" -e "s/*//g" 2>/dev/null)
+        local other_branches=$(git branch 2>/dev/null | sed -e "s/\n//g" -e "s/ //g" -e "s/\*.*//g" 2>/dev/null)
+        local commit_hashes=$(git rev-list --max-count=5 --all)
+    fi
     local ls_dir=$(ls)
-    local commit_hashes=$(git rev-list --max-count=5 --all)
     # these are hash maps that dont need shell completions
     declare -A ga_comp_maps=(
         ["--commit"]="-m --message"

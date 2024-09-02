@@ -13,13 +13,13 @@ void ERR::syntaxerror(int line, std::string& errline, std::string&& extrainfo) {
         i++;
     }
     if (extrainfo != "")
-        std::print(
+        fmt::print(
             "{}[ERR]{} syntax Error found\nLine "
             "{}\n\t{}\n\t{}{}{}\n{}[INFO]{} {}\n",
             red, nocol, line + 1, errline, red, squiglyline, nocol, green,
             nocol, extrainfo);
     else
-        std::print(
+        fmt::print(
             "{}[ERR]{} syntax Error found\nLine "
             "{}\n\t{}\n\t{}{}{}\n",
             red, nocol, line + 1, errline, red, squiglyline, nocol, green,
@@ -28,6 +28,6 @@ void ERR::syntaxerror(int line, std::string& errline, std::string&& extrainfo) {
 }
 
 void ERR::exitErr(std::string&& errmessage, int errnum) {
-    std::print(stderr, "{}[ERR]{} {}\n", red, nocol, errmessage);
+    fmt::print(stderr, "{}[ERR]{} {}\n", red, nocol, errmessage);
     exit(errnum);
 }

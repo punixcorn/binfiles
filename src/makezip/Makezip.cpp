@@ -20,16 +20,16 @@ bool exists(...);
  */
 void printallTargets(alltargets& T) {
     for (const auto target : T) {
-        std::print("{}[Target]{} : {}\n", green, nocol, target.targetName);
+        fmt::print("{}[Target]{} : {}\n", green, nocol, target.targetName);
         if (target.targets.size() == 0) {
-            std::print(stderr, "\t* {}No targets{}\n", red, nocol);
+            fmt::print(stderr, "\t* {}No targets{}\n", red, nocol);
             return;
         } else {
             for (const auto i : target.targets) {
-                std::print("\t-> {}\n", i);
+                fmt::print("\t-> {}\n", i);
             }
         }
-        std::print("\n");
+        fmt::print("\n");
     }
 };
 

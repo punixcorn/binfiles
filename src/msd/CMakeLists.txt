@@ -3,8 +3,9 @@ project(msd)
 add_executable(${PROJECT_NAME} msd.cxx ../engine/engine.hpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 26)
+find_package(fmt)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC "-static")
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt-header-only "-static")
 # options
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 

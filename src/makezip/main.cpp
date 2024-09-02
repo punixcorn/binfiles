@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
                 bold, nocol);
             exit(0);
         } else {
-            ERR::exitErr(std::format("invalid option\nrun {}man makezip{} for "
+            ERR::exitErr(fmt::format("invalid option\nrun {}man makezip{} for "
                                      "more information\n",
                                      bold, nocol),
                          1);
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     /*     return -1; */
     /* } */
 
-    /* std::print("main.cpp -> {}\n", ctime(&t)); */
+    /* fmt::print("main.cpp -> {}\n", ctime(&t)); */
     /* printf(" File access time %s", ctime(&filestat.st_atime)); */
     /* printf(" File modify time %s", ctime(&filestat.st_mtime)); */
     /* printf("File changed time %s", ctime(&filestat.st_ctime)); */
