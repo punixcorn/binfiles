@@ -9,9 +9,10 @@ set_target_properties(gitalias PROPERTIES CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 find_library(boost_system boost_execption boost_program_options REQUIRED)
+find_package(fmt)
 
 target_link_libraries(
-  gitalias PRIVATE boost_program_options boost_system boost_exception -static)
+    gitalias PRIVATE boost_program_options boost_system boost_exception fmt::fmt-header-only -static)
 
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)

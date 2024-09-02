@@ -1,22 +1,35 @@
 #include "Makezip.h"
 
+#include <filesystem>
+
 #include "errormessage.h"
+
+#if __cplusplus <= 202002L
+namespace std {
+void print(std::string, ...);
+void print(FILE*, std::string, ...);
+namespace filesystem {
+bool exists(...);
+}
+}  // namespace std
+
+#endif
 
 /*
  * output each target and it targets
  */
 void printallTargets(alltargets& T) {
     for (const auto target : T) {
-        std::print("{}[Target]{} : {}\n", green, nocol, target.targetName);
+        fmt::print("{}[Target]{} : {}\n", green, nocol, target.targetName);
         if (target.targets.size() == 0) {
-            std::print(stderr, "\t* {}No targets{}\n", red, nocol);
+            fmt::print(stderr, "\t* {}No targets{}\n", red, nocol);
             return;
         } else {
             for (const auto i : target.targets) {
-                std::print("\t-> {}\n", i);
+                fmt::print("\t-> {}\n", i);
             }
         }
-        std::print("\n");
+        fmt::print("\n");
     }
 };
 
@@ -88,10 +101,7 @@ void grabTargetsfiles(std::string& line, std::stringstream* buffer,
     }
 }
 
-const alltargets orderTargets(const alltargets& T, ...) {
-    
-    return T;
-}
+const alltargets orderTargets(const alltargets& T, ...) { return T; }
 
 /*
  * parses all the targets into a vector of targets
@@ -164,7 +174,7 @@ void* parseMakezip(std::stringstream* buffer, alltargets& T) {
 
                 if (config.find(' ') != std::string::npos) {
                     ERR::syntaxerror(currentlinenumber, errline,
-                                     std::format("Invalid config for target "
+                                     fmt::format("Invalid config for target "
                                                  "Header {}{}{}",
                                                  green, t.targetName, nocol));
                 }

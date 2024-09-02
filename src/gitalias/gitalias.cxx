@@ -4,10 +4,14 @@ Gitalias a git alias
 */
 
 /* new todo:
- * - push only one branch instead of all : git push -u origin branch
- * - fix grabbing files from curl
+ * - push only one branch instead of all : git push -u origin branch [done]
+ * - fix grabbing files from curl []
  * - move to libgit
- * - suggestive autocompelete
+ * - suggestive autocompelete [done]
+ * - remove --git ( no apparent use, this tool solves the DRY use of git not
+ * replace it )
+ * - use default username when cloneing a repo
+ * - make use of full c++ , remove more C stuff
  */
 
 /* boost includes */
@@ -37,9 +41,17 @@ Gitalias a git alias
 #include <cstdlib>
 #include <cstring>
 
-/*std*/
-#include <format>
-#include <print>
+/* std::print / fmt::format requires  C++23/C++26 final draft isn't , build
+ * failes on debian systems using fmt::print and fmt::format
+ */
+#ifdef __STDC__XX23__
+
+
+#else
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/std.h>
+#endif
 
 /* defines */
 #ifndef null
@@ -239,22 +251,30 @@ int main(int argc, char *argv[]) {
             T->merge = true;
             Isubcommand(G, " && git merge ", args["Merge"].as<string>());
         }
+        /* work on a script to jump to every branch and pull */
         if (args.count("Pull")) {
             T->pull = true;
             if (args["Pull"].as<string>() == "all") {
                 cout << "Pulling all remote branches..\n";
-                Isubcommand(G, " && git push --all ", "");
+                Isubcommand(G, " && git pull --all ", "");
             } else {
                 Isubcommand(G, " && git pull ", args["Pull"].as<string>());
             }
         }
         if (args.count("push")) {
             T->push = true;
-            if (arg("push", string) == "all") {
-                cout << "Pushing all branches...\n";
-                Isubcommand(G, " && git push --all ", "");
-            } else {
-                Isubcommand(G, " && git push ", args["push"].as<string>());
+            if (arg("push", string).size() == 0) {
+                Isubcommand(G, " && git push ", "");
+            }
+
+            if (arg("push", string).size() > 0) {
+                if (arg("push", string) == "all") {
+                    cout << "Pushing all branches...\n";
+                    Isubcommand(G, " && git push --all ", "");
+                } else {
+                    Isubcommand(G, " && git push -u origin ",
+                                arg("push", string));
+                }
             }
         }
 
@@ -325,7 +345,7 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            std::print("{}/{} has been made {} succesfully\n", User.username,
+            fmt::print("{}/{} has been made {} succesfully\n", User.username,
                        arg("Visibility", vector<string>)[index_of_reponame],
                        arg("Visibility",
                            vector<string>)[(index_of_reponame == 1 ? 0 : 1)]);
@@ -469,7 +489,7 @@ int main(int argc, char *argv[]) {
             Isubcommand(G, " && ", grabstr);
         }
         if (args.count("Json")) {
-            std::print(
+            fmt::print(
                 "================================================\n"
                 "                JSON options                    \n"
                 "username        : your username\n"
@@ -499,12 +519,12 @@ auto Isubcommand(Globals *g, const string_view &s1,
 }
 
 auto exitWithoutHelp(const string_view &e, int return_val) -> void {
-    std::print(stderr, "ERR: {}\n", e);
+    fmt::print(stderr, "ERR: {}\n", e);
     exit(return_val);
 }
 
 auto exitWithHelp(const string_view &e, int return_val) -> void {
-    std::print(stderr, "ERR: {}\ntry {} -- help for more information \n", e,
+    fmt::print(stderr, "ERR: {}\ntry {} -- help for more information \n", e,
                program_invocation_name);
     exit(return_val);
 }
@@ -521,7 +541,7 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
     // If file does not exist, Create new folder for the file
     if (!FileToWorkWith.is_open()) {
         fileCreated = true;
-        std::print(
+        fmt::print(
             "Cannot open file, file does not exist. Creating new file..\n");
 
         // checking if folder exists
@@ -538,14 +558,14 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
         }
 
         if (FileToWorkWith.is_open() && !FileToWorkWith.bad()) {
-            FileToWorkWith << std::format(
+            FileToWorkWith << fmt::format(
                 "{{\n"
                 "\"username\":\"YOUR_GITHUB_USERNAME\",\n"
                 "\"token\" : \"YOUR_GITHUB_TOKEN\",\n"
                 "\"default_message\" : \"DEFAULT COMMIT MESSAGE\"\n"
                 "}}\n");
         } else {
-            std::print("error with opened file\n");
+            fmt::print("error with opened file\n");
             exit(1);
         }
     }  // open/create file
@@ -556,7 +576,7 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
         char *s = new char[2];
         if (FileToWorkWith.getline(s, 1)) {
             if (std::string(s).size() == 0) {
-                std::print("ERROR with opened file :: EMPTY FILE\n");
+                fmt::print("ERROR with opened file :: EMPTY FILE\n");
             }
             exit(1);
         }
@@ -574,7 +594,7 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
             }
         } catch (const boost::wrapexcept<
                  boost::property_tree::json_parser::json_parser_error> &ex) {
-            std::print("{}", ex.what());
+            fmt::print("{}", ex.what());
         }
     }  // read json file
 
@@ -735,7 +755,7 @@ auto createOnlineRepo(Globals *g) -> void {
     char confirm{};
 
     /* consent lol */
-    std::print(
+    fmt::print(
         "Online repository details:\n"
         "\tName: {}\n"
         "\tDescription : {}\n"
@@ -789,7 +809,7 @@ auto createOnlineRepo(Globals *g) -> void {
 auto gitalias_main(Globals *g, bool v) -> void {
     if (g->subcommand.length()) g->command += g->subcommand;
     if (v) {
-        cout << "gitalias V2.6.0\nRunning Command:\n" << g->command << endl;
+        cout << "gitalias V2.6.5-dev\nRunning Command:\n" << g->command << endl;
     }
     system(g->command.c_str());
     exit(0);
@@ -851,7 +871,7 @@ auto parse(Globals *g, Trips *t) -> void {
 
             g->messagebox = commitMessage.size() == 0
                                 ? " -m 'made some changes' "
-                                : std::format("-m '{}' ", commitMessage);
+                                : fmt::format("-m '{}' ", commitMessage);
         }
         /* if not add trip */
         if (!t->add) {

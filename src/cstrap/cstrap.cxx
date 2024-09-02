@@ -9,13 +9,14 @@
 
 // === c++ === //
 #include <assert.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/std.h>
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <format>
 #include <fstream>
-#include <print>
 #include <sstream>
 #include <string>
 
@@ -47,7 +48,7 @@ struct Engine {
     Engine(char **argv, int argc) : Args(argv), Argc(argc) {};
 
     void ERR(string str, int status = 1) {
-        std::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
+        fmt::print(stderr, "{} : [ERR] {}\n", program_invocation_name, str);
         exit(status);
     }  // ERR
 
@@ -65,7 +66,7 @@ struct Engine {
     };
 
     void createFile(std::string File, std::string fileContents) {
-        std::ofstream fileStream(std::format("./{}/{}", project, File));
+        std::ofstream fileStream(fmt::format("./{}/{}", project, File));
         fileStream << fileContents;
         fileStream.close();
     }
@@ -88,7 +89,7 @@ struct Engine {
     }  // check_next
 
     void buildClangd() {
-        std::string str = std::format(
+        std::string str = fmt::format(
             "CompileFlags:\n"
             "\tAdd: [ -std={}{} ]\n",
             (language == "c" ? "c" : "c++"), standard);
@@ -99,12 +100,12 @@ struct Engine {
         // if template exists
         if (std::filesystem::exists("~/.Makefile") && Templates) {
             std::filesystem::copy("~/.Makefile",
-                                  std::format("./{}/Makefile", project));
+                                  fmt::format("./{}/Makefile", project));
             return;
         }
 
         std::string makestr{
-            std::format("CC={}\n"
+            fmt::format("CC={}\n"
                         "FILE={}\n"
                         "STD=-std={}{}\n"
                         "FLAGS=-g --all-warnings\n"
@@ -131,7 +132,7 @@ struct Engine {
             cmake_standard = "23";
         }
 
-        std::string cmakestr{std::format(
+        std::string cmakestr{fmt::format(
             "cmake_minimum_required(VERSION 3.5)\n"
             "project({0})\n"
             "add_executable(${{PROJECT_NAME}} {1})\n"
@@ -145,7 +146,7 @@ struct Engine {
             project, filename, (language == "c" ? "C" : "CXX"),
             cmake_standard)};
 
-        std::string make_for_cmake = std::format(
+        std::string make_for_cmake = fmt::format(
             "CC=cmake\n"
             "FILE={}\n"
             "main: build\n"
@@ -164,12 +165,12 @@ struct Engine {
                 language == "C") {
                 std::filesystem::copy(
                     "~/.CMakeLists.txt-c",
-                    std::format("./{}/CMakeLists.txt", project));
+                    fmt::format("./{}/CMakeLists.txt", project));
             } else if (std::filesystem::exists("~/.CMakeLists.txt-cpp") &&
                        language == "CXX") {
                 std::filesystem::copy(
                     "~/.CMakeLists.txt-c",
-                    std::format("./{}/CMakeLists.txt", project));
+                    fmt::format("./{}/CMakeLists.txt", project));
             } else {
                 createFile("CMakeLists.txt", cmakestr);
             }
@@ -180,7 +181,7 @@ struct Engine {
     }  // Cmake
 
     void createProjectDir() {
-        if (std::filesystem::exists(std::format("./{}", project))) {
+        if (std::filesystem::exists(fmt::format("./{}", project))) {
             ERR("project name already exists at current directory\n", 1);
         }
         std::filesystem::create_directory(project);
@@ -192,7 +193,7 @@ struct Engine {
         switch (Argc) {
             case 2:
                 if (isOptionFound(string(Args[1]), "--help")) {
-                    std::print(
+                    fmt::print(
                         "{} : create a simple project startup \n"
                         "-h    --help                       output this "
                         "message\n"
@@ -337,10 +338,10 @@ struct Engine {
         {
             if (std::filesystem::exists("~/.template.c") && Templates) {
                 std::filesystem::copy(
-                    "~/.template.c", std::format("./{}/{}", project, filename));
+                    "~/.template.c", fmt::format("./{}/{}", project, filename));
             } else {
                 createFile(filename,
-                           std::format("/*\n"
+                           fmt::format("/*\n"
                                        "\tproject: {} \n"
                                        "\tauthor: \n"
                                        "*/\n"
@@ -355,10 +356,10 @@ struct Engine {
             if (std::filesystem::exists("~/.template.cpp") && Templates) {
                 std::filesystem::copy(
                     "~/.template.cpp",
-                    std::format("./{}/{}", project, filename));
+                    fmt::format("./{}/{}", project, filename));
             } else {
                 createFile(filename,
-                           std::format("/*\n"
+                           fmt::format("/*\n"
                                        "\tproject: {}\n"
                                        "\tauthor: \n"
                                        "*/\n"
@@ -384,7 +385,7 @@ struct Engine {
         // setting up clangd
         buildClangd();
 
-        std::print(
+        fmt::print(
             "Created a project:{}\n"
             "language        : {}\n"
             "filename        : {}\n"
