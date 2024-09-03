@@ -15,19 +15,24 @@ Gitalias a git alias
  */
 
 /* boost includes */
+#include <array>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 #include <boost/program_options/value_semantic.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 /* C++ includes */
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <new>
+#include <ranges>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <type_traits>
 #include <vector>
 /* C includes */
@@ -41,17 +46,12 @@ Gitalias a git alias
 #include <cstdlib>
 #include <cstring>
 
-/* std::print / fmt::format requires  C++23/C++26 final draft isn't , build
- * failes on debian systems using fmt::print and fmt::format
+/* std::print / std::format requires  C++23/C++26 final draft isn't , build
+ * failes on debian systems using std::print and std:format
  */
-#ifdef __STDC__XX23__
-
-
-#else
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/std.h>
-#endif
 
 /* defines */
 #ifndef null
@@ -76,8 +76,8 @@ struct UserInfo {
 
 /* global varibales -> helps prevents extreme function arguments*/
 struct Globals {
-    Globals() {};
-    ~Globals() {};
+    Globals(){};
+    ~Globals(){};
     string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
         command = "[ -f /bin/git ] ";
     bool mode; /* user request mode */
@@ -95,26 +95,34 @@ struct Trips {
 /* ============== function declarations ================*/
 /* append into subcommand*/
 void Isubcommand(Globals *g, const string_view &s1, const string_view &s2);
+
 /* prints error message e with help message and kills program */
 auto exitWithHelp(const string_view &e, int return_val = 1) -> void;
+
 /* prints error message e and kills the program */
 auto exitWithoutHelp(const string_view &e, int return_val = 1) -> void;
+
 /* checks if you have a git repo init */
 auto getGitInfo() -> bool;
+
 /* check for staged files */
 auto checkStaged() -> bool;
+
 /* check is thing exists at place */
 [[nodiscard("if file exists in place")]] auto findFile(
     const string &place, const string_view &file) -> bool;
-/*finds config file and returns Json vaules about the user*/
-[[nodiscard("grab UserInfo from file")]] auto ParseUserInfo() -> UserInfo;
+
 /* create an online repository */
 auto createOnlineRepo(Globals *g) -> void;
+
 /* runs the command */
 auto gitalias_main(Globals *g, bool v) -> void;
+
 /* parses the struct  */
 auto parse(Globals *g, Trips *t) -> void;
-[[nodiscard("githubUserInfo file has been parsed")]] auto ParseUserInfo()
+
+/*finds config file and returns Json vaules about the user*/
+[[nodiscard("retrive UserInfo tokens from json file")]] auto ParseUserInfo()
     -> UserInfo;
 
 /* ============== Main ============*/
@@ -169,13 +177,14 @@ int main(int argc, char *argv[]) {
             "*Reset back to a commit ,eg gitalias -u "
             "[ hard / soft / mixed ] "
             "[ number of commits to reset back ]")(
-            "git,g", opt::value<vector<string>>()->multitoken(),
-            "append git commands [ gitalias -g \" git ... \" ]")(
             "Grab,G", opt::value<string>(),
             "grab a specific folder from a github repo")(
             "Visibility,V", opt::value<vector<string>>()->multitoken(),
             "Modify the status of a repo[private,public]")(
             "Json,J", "List the Json Options");
+        // remove --git
+        //("git,g", opt::value<vector<string>>()->multitoken(),"append git
+        // commands [ gitalias -g \" git ... \" ]")
 
         opt::variables_map args;
         opt::store(opt::command_line_parser(argc, argv)
@@ -262,7 +271,11 @@ int main(int argc, char *argv[]) {
             }
         }
         if (args.count("push")) {
+            // will push all if --all is given , will push to -u origin, if a
+            // specific branch is given or will just do a normal push in your
+            // branch
             T->push = true;
+
             if (arg("push", string).size() == 0) {
                 Isubcommand(G, " && git push ", "");
             }
@@ -281,31 +294,23 @@ int main(int argc, char *argv[]) {
         if (args.count("Visibility")) {
             if (arg("Visibility", vector<string>).size() != 2) {
                 exitWithoutHelp(
-                    "Invalid arguments\nUsage: --Visibility <repoName> "
+                    "1Invalid arguments\nUsage: --Visibility <repoName> "
                     "<private/public>");
             }
 
-            int index_of_reponame{0};
+            std::string_view viewType = arg("Visibility", vector<string>)[1];
+            std::string_view repoName = arg("Visibility", vector<string>)[0];
 
-            if ((arg("Visibility", vector<string>)[0] == "private") ||
-                (arg("Visibility", vector<string>)[0] == "public")) {
-                index_of_reponame = 1;
-            }
-
-            if (arg("Visibility",
-                    vector<string>)[(index_of_reponame == 1 ? 0 : 1)] !=
-                    "private" &&
-                arg("Visibility",
-                    vector<string>)[(index_of_reponame == 1 ? 0 : 1)] !=
-                    "public") {
+            if ((viewType != "private") && (viewType != "public")) {
                 exitWithoutHelp(
-                    "Invalid arguments\nUsage: --Visibility <repoName> "
+                    "2Invalid arguments\nUsage: --Visibility <repoName> "
                     "<private/public>");
-            };
+            }
 
             if (!findFile("/bin", "curl"))
                 exitWithoutHelp(
-                    "Could not find dependency : Svn... Terminating");
+                    "Could not find dependency : curl..."
+                    "\nTerminating...\n");
 
             UserInfo User = ParseUserInfo();
             if (User.username == "_" || User.token == "_") {
@@ -313,23 +318,19 @@ int main(int argc, char *argv[]) {
                     "Username and Token not set in config "
                     "file:\n~/.config/gitalias/githubuserinfo.json\n");
             }
-            char *Visibilitystr = new (nothrow) char[500];
 
-            std::snprintf(
-                Visibilitystr, 500,
-                "curl -u %s:%s --data \"{\\\"private\\\": \\\"%s\\\"}\" "
-                "--request PATCH https:\/\/api.github.com/repos/%s/%s",
-                User.username.c_str(), User.token.c_str(),
-                arg("Visibility",
-                    vector<string>)[(index_of_reponame == 1 ? 0 : 1)] ==
-                        "private"
-                    ? "true"
-                    : "false",
-                User.username.c_str(),
-                arg("Visibility", vector<string>)[index_of_reponame].c_str());
+            std::string Vstr{};
+            Vstr = fmt::format(
+                "curl -u {}:{} --data \"{{\\\"private\\\": \\\"{}\\\"}}\" "
+                "--request PATCH https://api.github.com/repos/{}/{} | tee "
+                "/dev/null",
+                User.username, User.token,
+                viewType == "private" ? "true" : "false", User.username,
+                repoName);
 
-            FILE *instance = popen(Visibilitystr, "r");
+            FILE *instance = popen(Vstr.c_str(), "r");
             char buffer[1000];
+
             while (fgets(buffer, 999, instance) != null) {
                 if (strstr(buffer, "Bad credentials") != null) {
                     exitWithoutHelp(
@@ -344,41 +345,59 @@ int main(int argc, char *argv[]) {
                         "check internet connection");
                 }
             }
-
             fmt::print("{}/{} has been made {} succesfully\n", User.username,
-                       arg("Visibility", vector<string>)[index_of_reponame],
-                       arg("Visibility",
-                           vector<string>)[(index_of_reponame == 1 ? 0 : 1)]);
+                       arg("Visibility", vector<string>)[0],
+                       arg("Visibility", vector<string>)[1]);
         }
 
         if (args.count("Clone")) {
+            // will clone in 3 ways
+            // 1. you pass in the whole link
+            // 2. you pass in username/repo-name -R ssh or https ( default is
+            // https)
+            // 3. you pass in repo-name, it will clone with your
+            // username/repo-name
+
             string tempstr{}, dir{};
             tempstr = arg("Clone", vector<string>).front();
-            size_t tsize = arg("Clone", vector<string>).size();
-            if (tsize == 2) {
+            size_t arg_count = arg("Clone", vector<string>).size();
+            if (arg_count == 2) {
                 dir = arg("Clone", vector<string>).back();
-            } else if (tsize > 2) {
+            } else if (arg_count > 2) {
                 exitWithoutHelp(
                     "--Clone / -C takes in only 2 args max, The folder to "
                     "clone "
                     "and the dir to clone into");
             }
 
+            // finding github url in the string
             if (tempstr.find("https://github.com") != string::npos ||
                 tempstr.find("git@github") != string::npos) {
                 tempstr += " ";
                 tempstr += dir;
+                tempstr += " ";
                 Isubcommand(G, " && git clone ", tempstr);
-                Isubcommand(G, " ", "");
             } else {
+                // didn't find github link
                 string clonestr{"&& git clone "};
-                if (args["Request"].as<string>() == "ssh") {
-                    cout << "[Cloning Protocol]: ssh\n";
+
+                // didnt find username/reponame so fixing it
+                if (tempstr.find("/") == std::string::npos) {
+                    UserInfo currentuser = ParseUserInfo();
+
+                    // append username to the front
+                    tempstr.insert(0, "/");
+                    tempstr.insert(0, currentuser.username);
+                }
+
+                // found username/reponame
+                if (arg("Request", string) == "ssh") {
+                    cout << "Cloning Protocol : ssh\n";
                     clonestr += "git@github.com:";
                     clonestr += tempstr;
                     clonestr += ".git ";
                 } else {
-                    cout << "[Cloning Protocol]: https\n";
+                    cout << "Cloning Protocol: https\n";
                     clonestr += "https://github.com/";
                     clonestr += tempstr;
                     clonestr += " ";
@@ -399,14 +418,21 @@ int main(int argc, char *argv[]) {
             Isubcommand(G, " && git status ", "");
         }
         if (args.count("origin")) {
-            size_t buffersize = 256;
-            char *otemp = new (nothrow) char[buffersize]{};
+            // work in 2 ways
+            // 1. pass in username/repo
+            // 2. pass in repo will use default username
+
+            std::string final = arg("origin", string);
+            if (final.find("/") == std::string::npos) {
+                final.insert(0, "/");
+                final.insert(0, ParseUserInfo().username);
+            }
             T->origin = true;
-            snprintf(otemp, buffersize,
-                     " && git remote add origin git@github.com:%s && git "
-                     "branch -M "
-                     "main && git push -u origin main",
-                     arg("origin", string).c_str());
+            std::string otemp{fmt::format(
+                " && git remote add origin git@github.com:{}.git && git "
+                "branch -M "
+                "main && git push -u origin main ",
+                final)};
             Isubcommand(G, otemp, "");
         }
         if (args.count("repo")) {
@@ -782,11 +808,6 @@ auto createOnlineRepo(Globals *g) -> void {
              token.c_str(), g->reponame.c_str(), g->repodes.c_str(),
              (g->mode == true ? "true" : "false"));
 
-    /* //-------// */
-    /* printf("%s\n", crepo); */
-    /* exit(0); */
-    //------//
-
     /* running it here instead of passing it to run */
     FILE *instance = popen(crepo, "r");
     char buffer[1000];
@@ -809,7 +830,9 @@ auto createOnlineRepo(Globals *g) -> void {
 auto gitalias_main(Globals *g, bool v) -> void {
     if (g->subcommand.length()) g->command += g->subcommand;
     if (v) {
-        cout << "gitalias V2.6.5-dev\nRunning Command:\n" << g->command << endl;
+        fmt::print("\ngitalias V2.6.6-dev\nRunning Command: {} \n", g->command);
+        fmt::print("Press any key to continue, Ctrl+c to quit...\n");
+        getchar();
     }
     system(g->command.c_str());
     exit(0);
