@@ -53,7 +53,7 @@ __gitalias_completions() {
     )
 
     COMPREPLY=()
-    local commands="--help -h --message -m --commit -c --add -a --init -i --branch -b  -s --switch -d --delete -M --Merge --Pull -P --push -p --Clone -C --Request -R --verbose -v --log -l --Status -S --origin -o --repo -r --Des -D --type -t --undo -u --git -g --Grab -G"
+    local commands="--help -h --message -m --commit -c --add -a --init -i --branch -b  -s --switch -d --delete -M --Merge --Pull -P --push -p --Clone -C --Request -R --verbose -v --log -l --Status -S --origin -o --repo -r --Des -D --type -t --undo -u --Grab -G  --Visibility -V"
 
     # current is compwords[i-1];
     local curr=${COMP_WORDS[$((COMP_CWORD - 1))]}
@@ -109,8 +109,6 @@ _msd_completions() {
         ["-d"]="$devices"
         ["--umount"]="$mounted"
         ["-u"]="$mounted"
-        #["--place"]="$(/bin/ls /)"
-        #["-p"]="$(/bin/ls /)"
     )
     local curr=${COMP_WORDS[$((COMP_CWORD - 1))]}
     local commands="-h --help -lsblk -u --umount --help -p --place -d --device"
@@ -131,7 +129,7 @@ _ff_completions() {
     COMPREPLY+=($(compgen -W "-h --help --parms -p -v " "${COMP_WORDS[1]}" 2>/dev/null))
 }
 _makezip_completions() {
-    COMPREPLY+=($(compgen -W "-h --help -t --targets" "${COMP_WORDS[1]}" 2>/dev/null))
+    COMPREPLY+=($(compgen -W "-h --help -t --targets -c --changes" "${COMP_WORDS[1]}" 2>/dev/null))
 }
 
 complete -F __gitalias_completions gitalias

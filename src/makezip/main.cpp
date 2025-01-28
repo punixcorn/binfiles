@@ -1,7 +1,6 @@
-#include "Makezip.h"
+#include "zip.hpp"
+// holds defines
 #include "defines.h"
-#include "errormessage.h"
-#include "zip.h"
 
 /*
     Not complete
@@ -21,25 +20,33 @@
  */
 
 int main(int argc, char **argv) {
-    alltargets T;
+    Makezip::alltargets T;
     std::stringstream *buffer;
 
-    buffer = getMakeZipContents(null);
-    parseMakezip(buffer, T);
-    if (argc > 1) {
-        if ((strcmp(argv[1], "-t") == 0) ||
-            (strcmp(argv[1], "--targets") == 0)) {
-            printallTargets(T);
-            exit(0);
-        } else if ((strcmp(argv[1], "-h") == 0) ||
-                   (strcmp(argv[1], "--help") == 0)) {
-            print(
+    if (argc == 2) {
+        if ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)) {
+            fmt::print(
                 "makezip : Create and update zipfiles using Makezip config\n"
                 "makezip options:\n"
                 "\t--help         print this message\n"
                 "\t--targets      print all targets and exit\n"
+                "\t--changes      print all targets with changes and exit\n"
                 "for more info run {}man makezip{}",
                 bold, nocol);
+            exit(0);
+        }
+
+        if ((strcmp(argv[1], "-t") == 0) ||
+            (strcmp(argv[1], "--targets") == 0)) {
+            buffer = Makezip::getMakeZipContents(null);
+            parseMakezip(buffer, T);
+            printallTargets(T);
+            exit(0);
+        } else if ((strcmp(argv[1], "-c") == 0) ||
+                   (strcmp(argv[1], "--changes") == 0)) {
+            buffer = Makezip::getMakeZipContents(null);
+            parseMakezip(buffer, T);
+            zzip::printChangedFiles(T);
             exit(0);
         } else {
             ERR::exitErr(fmt::format("invalid option\nrun {}man makezip{} for "
@@ -47,19 +54,14 @@ int main(int argc, char **argv) {
                                      bold, nocol),
                          1);
         }
+    } else if (argc > 2) {
+        ERR::exitErr(fmt::format("invalid option\nrun {}man makezip{} for "
+                                 "more information\n",
+                                 bold, nocol),
+                     1);
     }
+
+    buffer = Makezip::getMakeZipContents(null);
+    parseMakezip(buffer, T);
     zzip::makezip(T);
-
-    /* zip_t *z = zzip::init("z.zip"); */
-    /* time_t t = zzip::getFileModifiedTime(z, "defines.h"); */
-
-    /* if (t == 0) { */
-    /*     return -1; */
-    /* } */
-
-    /* fmt::print("main.cpp -> {}\n", ctime(&t)); */
-    /* printf(" File access time %s", ctime(&filestat.st_atime)); */
-    /* printf(" File modify time %s", ctime(&filestat.st_mtime)); */
-    /* printf("File changed time %s", ctime(&filestat.st_ctime)); */
-    /* return 0; */
 }

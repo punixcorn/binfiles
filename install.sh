@@ -25,3 +25,10 @@ elif [ -f "$HOME/.bashrc" ]; then
 else
     error "[-] Could not find any shell startup files : .bashrc .zshrc\n"
 fi
+
+echo "Installing Man pages"
+if [[ -d "/usr/share/man/man1/" ]]then 
+    sudo cp -r manpages/* /usr/share/man/man1/
+else 
+    echo "You don't have manpages install or the default dir set, no manpages will be installed"
+fi
