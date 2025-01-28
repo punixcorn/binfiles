@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(makezip)
-add_executable(${PROJECT_NAME} main.cpp zip.cpp Makezip.cpp errormessage.cpp)
+add_executable(${PROJECT_NAME} main.cpp)
 
 # finally made fmt static
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 26)

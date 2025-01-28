@@ -1,8 +1,12 @@
-#z.zip: add 
-#    zip.h
-#    zip.cpp
-#    main.cpp
-#    defines.h
+z.zip: add 
+   main.cpp 
+   ./Makefile 
+   build
+   ./includes.hpp
+   ./CMakeLists.txt
+   ./errormessage.hpp
+   ./bin
 
-file.zip:
-    build
+z.zip: delete
+    ./build
+    ./includes.hpp

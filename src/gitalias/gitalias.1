@@ -1,0 +1,199 @@
+
+.TH GITALIAS 1 "January 2025" "1.0" "User Commands"
+.SH NAME
+gitalias \- A CLI tool for simplifying Git commands by parsing arguments into Git operations.
+
+.SH SYNOPSIS
+.B gitalias
+[\fIoptions\fR] [\fIarguments\fR]
+
+.SH DESCRIPTION
+.B gitalias
+is a command-line tool designed to simplify and combine Git commands into a single command. It allows users to efficiently perform multiple Git operations with minimal input.
+
+.SH OPTIONS
+.TP
+\fB-h, --help\fR
+Print this help message.
+.TP
+\fB-i, --init\fR
+Initialize a Git repository.
+.TP
+\fB-c, --commit\fR
+Add all files and commit changes.
+.TP
+\fB-a, --add\fR \fIarg\fR
+Add specific files to staging.
+.TP
+\fB-m, --message\fR \fIarg\fR
+Add a commit message. Multiple messages are translated into new lines.
+.TP
+\fB-b, --branch\fR \fIarg\fR
+Create a new branch.
+.TP
+\fB-s, --switch\fR \fIarg\fR
+Switch to an existing branch.
+.TP
+\fB-d, --delete\fR \fIarg\fR
+Delete a branch.
+.TP
+\fB-M, --Merge\fR \fIarg\fR
+Merge a branch into the current branch.
+.TP
+\fB-P, --Pull\fR \fIarg\fR
+Pull changes from the remote repository.
+.TP
+\fB-p, --push\fR \fIarg\fR
+Push changes to the remote repository.
+.TP
+\fB-C, --Clone\fR \fIarg\fR
+Clone a repository with the format \fIuser/repo-name\fR.
+.TP
+\fB-R, --Request\fR \fIarg\fR (default: \fBhttps\fR)
+Specify the protocol to use when cloning (https or ssh).
+.TP
+\fB-v, --verbose\fR
+Print the parsed Git commands.
+.TP
+\fB-l, --log\fR
+Show the Git log.
+.TP
+\fB-S, --Status\fR
+Show the Git repository status.
+.TP
+\fB-o, --origin\fR \fIarg\fR
+Add a remote origin.
+.TP
+\fB-r, --repo\fR \fIarg\fR
+Name for creating an online repository.
+.TP
+\fB-D, --Des\fR \fIarg\fR
+Description for the online repository.
+.TP
+\fB-t, --type\fR \fIbool\fR
+Set the repository type (private or public).
+.TP
+\fB-u, --undo\fR \fIarg\fR
+Reset the repository to a previous state. Use \fBhard\fR, \fBsoft\fR, or \fBmixed\fR with the number of commits to reset back.
+.TP
+\fB-G, --Grab\fR \fIarg\fR
+Grab a specific folder from a GitHub repository using SVN.
+.TP
+\fB-V, --Visibility\fR \fIarg\fR
+Modify the visibility of a repository (private or public).
+.TP
+\fB-J, --Json\fR
+List available JSON options for configuration.
+
+.SH EXAMPLES
+The following command:
+.B gitalias -i -a . -c -m "New commit made" "Added new files" -b testing-branch -s testing-branch -r newRepo -D "A repo for my testing branch" -t false -o punixcorn/newRepo
+.PP
+Performs the following actions in sequence:
+.IP \(bu 2
+Initializes a Git repository (if not already initialized).
+.IP \(bu
+Adds all files to the staging area.
+.IP \(bu
+Commits the changes with the message:
+.RS
+.nf
+New commit made
+Added new files
+.fi
+.RE
+.IP \(bu
+Creates a branch named \fBtesting-branch\fR.
+.IP \(bu
+Switches to the \fBtesting-branch\fR.
+.IP \(bu
+Creates an online repository named \fBnewRepo\fR with the description \fBA repo for my testing branch\fR and privacy set to \fBfalse\fR.
+.IP \(bu
+Pushes the local repository to the newly created online repository.
+
+.SH MORE INFORMATION
+.B gitalias
+is designed to handle common scenarios with minimal input:
+.TP
+If a repository is not initialized, the tool will prompt to initialize it automatically.
+.TP
+If no commit message is provided, an automatic message such as \fBcommit made\fR will be used.
+.TP
+Adding files is optional, as the tool will automatically stage all files if the \fB-c\fR option is used without specifying files.
+.RS
+.nf
+.B gitalias -c
+.fi
+.RE
+
+.SH CUSTOM GIT COMMANDS
+Use the \fB-g\fR or \fB--git\fR option to execute additional Git commands not covered by default. For example:
+.RS
+.nf
+.B gitalias -g "add ." "commit -m 'foo'"
+.fi
+.RE
+This translates to:
+.RS
+.nf
+.B git add . && git commit -m 'foo'
+.fi
+.RE
+
+.SH MULTILINE COMMIT MESSAGES
+Commit messages provided via the \fB-m\fR option are translated into new lines. For example:
+.RS
+.nf
+.B gitalias -c -m "New feature" "added some files" "most in c"
+.fi
+.RE
+Results in the commit message:
+.RS
+.nf
+New feature
+added some files
+most in c
+.fi
+.RE
+
+.SH CLONING REPOSITORIES
+The \fB-C\fR or \fB--Clone\fR option allows you to clone repositories using HTTPS by default. To use SSH or specify a protocol, use the \fB-R\fR or \fB--Request\fR option:
+.TP
+.B gitalias -C punixcorn/foo
+Clones the repository \fBfoo\fR from user \fBpunixcorn\fR using HTTPS.
+.TP
+.B gitalias -C punixcorn/foo -R ssh
+Clones the same repository using SSH.
+
+.SH GRABBING FOLDERS
+The \fB-G\fR or \fB--Grab\fR option allows you to clone specific folders from a GitHub repository using SVN. Attach the link to the folder you want to grab.
+
+.SH CREATING ONLINE REPOSITORIES
+The \fB-r\fR, \fB-D\fR, and \fB-t\fR options create an online repository using \fBcurl\fR. For example:
+.RS
+.nf
+.B gitalias -r newRepo -D "A new repository" -t true
+.fi
+.RE
+The tool prompts:
+.RS
+.nf
+You are about to create an online repository with the following data:
+ Name of repository: newRepo
+ Description: A new repository
+ Mode: Private
+ Continue with creation of the online repository [y,N]:
+.fi
+.RE
+The GitHub token must be stored in \fI~/.config/gitalias/githubuserinfo.json\fR for this functionality.
+To generate a \fBgithubuserinfo.json\fR use 
+.RS 
+.nf 
+.B gitalias --json 
+.fi 
+.RE
+
+.SH SEE ALSO
+.B git(1)
+.SH AUTHOR
+Created by a developer passionate about streamlining Git workflows.

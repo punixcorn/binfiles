@@ -93,7 +93,7 @@ gitalias -c // this will add all files, and commit with a message 'commit made'
 
 ```txt
 New feature
-added some files 
+added some files
 most in c
 ```
 
@@ -136,11 +136,11 @@ msd /mnt sda1
 
 ```bash
 NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
-nvme0n1     259:0    0 238.5G  0 disk 
+nvme0n1     259:0    0 238.5G  0 disk
 ├─nvme0n1p1 259:1    0   512M  0 part /boot
 ├─nvme0n1p2 259:2    0     9G  0 part [SWAP]
 ├─nvme0n1p3 259:3    0 207.7G  0 part /
-└─nvme0n1p6 259:4    0  21.3G  0 part 
+└─nvme0n1p6 259:4    0  21.3G  0 part
 mount:
 ```
 

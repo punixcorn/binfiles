@@ -1,21 +1,20 @@
 /*
-Copyright 2023 punixcorn
+Gitalias @ 2023 punixcorn
 Gitalias a git alias
 */
 
 /* new todo:
  * - push only one branch instead of all : git push -u origin branch [done]
  * - fix grabbing files from curl []
- * - move to libgit
+ * - move to libgit [done another file, not recommended]
  * - suggestive autocompelete [done]
  * - remove --git ( no apparent use, this tool solves the DRY use of git not
- * replace it )
- * - use default username when cloneing a repo
- * - make use of full c++ , remove more C stuff
+ * replace it ) [done]
+ * - use default username when cloneing a repo [done]
+ * - make use of full c++ , remove more C stuff [done-ish]
  */
 
 /* boost includes */
-#include <array>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options.hpp>
@@ -26,32 +25,28 @@ Gitalias a git alias
 /* C++ includes */
 #include <cctype>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <new>
-#include <ranges>
 #include <string>
 #include <string_view>
-#include <thread>
 #include <type_traits>
 #include <vector>
 /* C includes */
 #include <alloca.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fmt/base.h>
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/std.h>
 #include <unistd.h>
 
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-/* std::print / std::format requires  C++23/C++26 final draft isn't , build
- * failes on debian systems using std::print and std:format
- */
-#include <fmt/core.h>
-#include <fmt/format.h>
-#include <fmt/std.h>
 
 /* defines */
 #ifndef null
@@ -74,14 +69,43 @@ struct UserInfo {
     std::string defaultMessage;
 };
 
+/* handle application error */
+struct Error_occured {
+    // make this a vector -> handles more error messages
+   private:
+    std::string message;
+
+   public:
+    Error_occured() : error_occured(false), message("") {}
+    bool error_occured;
+
+    void trip(std::string &&text) {
+        error_occured = true;
+        message = text;
+    }
+
+    void trip(bool state, std::string &&text) {
+        error_occured = state;
+        message = text;
+    }
+
+    std::string what() {
+        if (error_occured && message.size() == 0) {
+            return std::format("Unknown, Error occured in the application\n");
+        }
+        return std::format("Error Occured in the Application:\n{}", message);
+    }
+};
+
 /* global varibales -> helps prevents extreme function arguments*/
 struct Globals {
-    Globals(){};
-    ~Globals(){};
+    Globals() {};
+    ~Globals() {};
     string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
         command = "[ -f /bin/git ] ";
     bool mode; /* user request mode */
     vector<string>(Sreset);
+    Error_occured App_error;
 };
 
 struct Trips {
@@ -109,8 +133,9 @@ auto getGitInfo() -> bool;
 auto checkStaged() -> bool;
 
 /* check is thing exists at place */
-[[nodiscard("if file exists in place")]] auto findFile(
-    const string &place, const string_view &file) -> bool;
+[[nodiscard("if file exists in place")]] auto findFile(const string &place,
+                                                       const string_view &file)
+    -> bool;
 
 /* create an online repository */
 auto createOnlineRepo(Globals *g) -> void;
@@ -143,7 +168,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     try {
-        opt::options_description desc(string(*argv).append(" options"));
+        opt::options_description desc("gitalias options");
         desc.add_options()("help,h", "print this message")(
             "init,i", "init a repository")("commit,c", "add all and commit")(
             "add,a", opt::value<vector<string>>()->multitoken(),
@@ -204,7 +229,8 @@ int main(int argc, char *argv[]) {
             boost::algorithm::replace_all(helpMsg, "[ -", "[ --");
             cout << helpMsg << "\n";
             */
-            cout << desc << "\n";
+            cout << desc << "\n"
+                 << "for more info try\e[1m man gitalias\e[0m\n";
             exit(0);
         }
         /* Check for trips */
@@ -384,7 +410,13 @@ int main(int argc, char *argv[]) {
                 // didnt find username/reponame so fixing it
                 if (tempstr.find("/") == std::string::npos) {
                     UserInfo currentuser = ParseUserInfo();
-
+                    if (currentuser.username == "_") {
+                        G->App_error.trip(
+                            "Username Unknown, populate "
+                            "~/.config/gitalias/githubuserinfo.json with your "
+                            "username\n"
+                            "A file should have already been created for you");
+                    }
                     // append username to the front
                     tempstr.insert(0, "/");
                     tempstr.insert(0, currentuser.username);
@@ -538,8 +570,8 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-auto Isubcommand(Globals *g, const string_view &s1,
-                 const string_view &s2) -> void {
+auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
+    -> void {
     g->subcommand += s1;
     if (s2.length() != 0) g->subcommand += s2;
 }
@@ -550,8 +582,10 @@ auto exitWithoutHelp(const string_view &e, int return_val) -> void {
 }
 
 auto exitWithHelp(const string_view &e, int return_val) -> void {
-    fmt::print(stderr, "ERR: {}\ntry {} -- help for more information \n", e,
-               program_invocation_name);
+    fmt::print(stderr,
+               "ERR: {}\ntry {} --help or \e[1mman gitalias\e[0m for more "
+               "information \n",
+               e, program_invocation_name);
     exit(return_val);
 }
 
@@ -652,8 +686,8 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
         ;
     else if (userinfo.token.size() > 41) {
         exitWithoutHelp(
-            "Invalid values obtain from config file "
-            "~/.config/gitalias/githubuserinfo\n"
+            "Invalid values obtain from config file\n"
+            "in ~/.config/gitalias/githubuserinfo:\n"
             "Token length > 40 chars");
     }
 
@@ -834,6 +868,10 @@ auto gitalias_main(Globals *g, bool v) -> void {
         fmt::print("Press any key to continue, Ctrl+c to quit...\n");
         getchar();
     }
+    if (g->App_error.error_occured) {
+        exitWithoutHelp(g->App_error.what());
+    }
+
     system(g->command.c_str());
     exit(0);
 }

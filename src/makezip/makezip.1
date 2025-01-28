@@ -1,0 +1,182 @@
+.TH MAKEZIP 1 "January 2025" "makezip 1.1" "User Commands"
+.SH NAME
+makezip \- Automate the creation and modification of ZIP files using Makefile-like syntax.
+.SH SYNOPSIS
+.B makezip
+.RI [ options ]
+.SH DESCRIPTION
+.B makezip
+is a command-line utility that reads a
+.B Makezip
+file from the current directory and processes its targets to create or modify ZIP archives.  
+The syntax is inspired by Makefiles, allowing users to define targets and the operations to perform on files.  
+.PP
+Each target in the
+.B Makezip
+file represents a ZIP archive to create or modify. Targets specify files to add or remove, with operations such as
+.BR add " (default)" and
+.BR delete .
+Additionally, the utility can display file-level changes between the ZIP archive and the current files.
+
+.SH SYNTAX
+.RS
+The general syntax for a
+.B Makezip
+file is:
+.PP
+.EX
+target.zip: [operation]
+    file1
+    file2
+    ...
+.EE
+.RE
+.PP
+.TP
+.B target.zip
+Specifies the name of the ZIP file. If the
+.B .zip
+extension is omitted, it is automatically added.  
+.TP
+.B operation
+Specifies the operation to perform on the ZIP file:
+.RS
+.IP "add (+a)" 4
+(Default) Adds the specified files to the ZIP file.  
+.IP "delete (-d)" 4
+Removes the specified files from the ZIP file.
+.RE
+.SH OPTIONS
+.TP
+.B --targets
+Lists all targets defined in the
+.B Makezip
+file.  
+.TP
+.B --changes, -c
+Displays changes between the ZIP file and the current files. Outputs a list of files under each target and their respective statuses:
+.RS
+.IP "A" 4
+File will be added to the ZIP archive.  
+.IP "D" 4
+File will be deleted from the ZIP archive.  
+.IP "*" 4
+File exists in both the ZIP and current directory with no changes.  
+.IP "??" 4
+An issue occurred with the file, but it is ignored.
+.RE
+.TP
+.B --help
+Displays a help message with usage instructions.
+.SH OUTPUT
+When using
+.B --changes / -c 
+or
+.B when running a makezip,
+the output format is:
+.PP
+.EX
+[archive] : <zip-name> <operation>
+    <status> <file-path>
+    ...
+.EE
+.PP
+Where
+.B <operation>
+is either
+.B +a
+(for additions)
+or
+.B -d
+(for deletions), and
+.B <status>
+is one of:
+.BR A ,
+.BR D ,
+.BR * ,
+or
+.BR ?? .
+
+.SH EXAMPLES
+.TP
+.B Displaying changes
+.EX
+$ makezip --changes
+[archive] : z.zip +a
+    A main.cpp
+    * ./Makefile [no changes]
+    A build
+    A ./includes.hpp
+    * ./CMakeLists.txt [no changes]
+    * ./errormessage.hpp [no changes]
+    A ./bin
+[archive] : z.zip -d
+    D ./build
+    D ./includes.hpp
+.EE
+Lists the files to be added or deleted for the
+.B z.zip
+archive, along with their statuses.
+.TP
+.B Creating a ZIP file
+.EX
+all.zip:
+    file1.cpp
+    file2.cpp
+.EE
+Creates
+.B all.zip
+and adds
+.B file1.cpp
+and
+.B file2.cpp
+to it.
+.TP
+.B Adding files to a ZIP file
+.EX
+all.zip: add
+    file3.cpp
+.EE
+Adds
+.B file3.cpp
+to
+.B all.zip .
+.TP
+.B Removing files from a ZIP file
+.EX
+all.zip: delete
+    file2.cpp
+.EE
+Removes
+.B file2.cpp
+from
+.B all.zip .
+.TP
+.B Omitting the .zip extension
+.EX
+all:
+    file1.cpp
+.EE
+Creates
+.B all.zip
+and adds
+.B file1.cpp
+to it.
+.TP
+.B Listing targets
+.EX
+$ makezip --targets
+.EE
+Lists all targets defined in the
+.B Makezip
+file.
+.SH FILES
+.TP
+.B Makezip
+The file in the current directory that defines the targets and operations for
+.B makezip .
+.SH SEE ALSO
+.BR zip (1),
+.BR unzip (1)
+.SH AUTHOR
+Written by the Hyun Wo (ohyunwoods663@gmail.com)
