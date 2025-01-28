@@ -37,7 +37,7 @@ Gitalias a git alias
 #include <alloca.h>
 #include <dirent.h>
 #include <errno.h>
-#include <fmt/base.h>
+// #include <fmt/base.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/std.h>
