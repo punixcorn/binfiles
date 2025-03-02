@@ -4,6 +4,7 @@ src/gitalias/bin/
 src/makehere/build/ 
 src/makehere/bin/
 src/makezip/bin/
+src/makezip/install
 src/makezip/build
 src/build/ 
 src/bin/

@@ -91,16 +91,16 @@ struct Error_occured {
 
     std::string what() {
         if (error_occured && message.size() == 0) {
-            return std::format("Unknown, Error occured in the application\n");
+            return fmt::format("Unknown, Error occured in the application\n");
         }
-        return std::format("Error Occured in the Application:\n{}", message);
+        return fmt::format("Error Occured in the Application:\n{}", message);
     }
 };
 
 /* global varibales -> helps prevents extreme function arguments*/
 struct Globals {
-    Globals() {};
-    ~Globals() {};
+    Globals(){};
+    ~Globals(){};
     string messagebox, addbox, reponame, repodes, subcommand, Resetcommand,
         command = "[ -f /bin/git ] ";
     bool mode; /* user request mode */
@@ -110,7 +110,6 @@ struct Globals {
 
 struct Trips {
     Trips() { memset(this, 0, sizeof(*this)); };
-    ~Trips() { delete this; };
     bool commit, message, add, init, branch, switch_, deleteBranch, merge, pull,
         push, origin, log, status, repoName, repoDes, repoMode, verbose, Rreset,
         git;
@@ -186,7 +185,7 @@ int main(int argc, char *argv[]) {
                                 opt::value<string>()->implicit_value(""),
                                 "push into origin")(
             "Clone,C", opt::value<vector<string>>()->multitoken(),
-            "clone a repository with given \"user/repo-name\"")(
+            "clone a repository with given \"user/repo-name\" dir depth")(
             "Request,R", opt::value<string>()->default_value("https"),
             "Protocol to use when cloning, [ https/ssh ]")(
             "verbose,v", "print out parsed code")("log,l", "show log files")(
@@ -384,25 +383,41 @@ int main(int argc, char *argv[]) {
             // 3. you pass in repo-name, it will clone with your
             // username/repo-name
 
-            string tempstr{}, dir{};
+            // ++ adding the option to do 1 to do --depth
+            string tempstr{}, clone_dir{}, depth{};
             tempstr = arg("Clone", vector<string>).front();
             size_t arg_count = arg("Clone", vector<string>).size();
-            if (arg_count == 2) {
-                dir = arg("Clone", vector<string>).back();
-            } else if (arg_count > 2) {
+
+            if (arg_count == 3) {
+                clone_dir = arg("Clone", vector<string>)[1];
+                depth = arg("Clone", vector<string>).back();
+                if (atoi(arg("Clone", vector<string>).back().c_str()) == 0)
+                    exitWithoutHelp(
+                        "Clone takes in only 3 args max, The folder to "
+                        "clone "
+                        "and the dir to clone into and the depth\n"
+                        "if all three are used, the depth should be last");
+            } else if (arg_count == 2) {
+                if (atoi(arg("Clone", vector<string>).back().c_str()) != 0)
+                    depth = arg("Clone", vector<string>).back();
+                else
+                    clone_dir = arg("Clone", vector<string>).back();
+            } else if (arg_count > 3) {
                 exitWithoutHelp(
-                    "--Clone / -C takes in only 2 args max, The folder to "
+                    "Clone takes in only 3 args max, The folder to "
                     "clone "
-                    "and the dir to clone into");
+                    "and the dir to clone into and the depth");
             }
 
             // finding github url in the string
             if (tempstr.find("https://github.com") != string::npos ||
                 tempstr.find("git@github") != string::npos) {
-                tempstr += " ";
-                tempstr += dir;
-                tempstr += " ";
+                if (!clone_dir.empty())
+                    tempstr += fmt::format(" {} ", clone_dir);
                 Isubcommand(G, " && git clone ", tempstr);
+                if (!depth.empty())
+                    Isubcommand(G, "  ", fmt::format("--depth {} ", depth));
+
             } else {
                 // didn't find github link
                 string clonestr{"&& git clone "};
@@ -425,17 +440,15 @@ int main(int argc, char *argv[]) {
                 // found username/reponame
                 if (arg("Request", string) == "ssh") {
                     cout << "Cloning Protocol : ssh\n";
-                    clonestr += "git@github.com:";
-                    clonestr += tempstr;
-                    clonestr += ".git ";
+                    clonestr += fmt::format("git@github.com:{}.git ", tempstr);
                 } else {
                     cout << "Cloning Protocol: https\n";
-                    clonestr += "https://github.com/";
-                    clonestr += tempstr;
-                    clonestr += " ";
+                    clonestr += fmt::format("https://github.com/{} ", tempstr);
                 }
-                clonestr += dir;
+                clonestr += clone_dir;
                 Isubcommand(G, clonestr, " ");
+                if (!depth.empty())
+                    Isubcommand(G, "  ", fmt::format("--depth {} ", depth));
             }
         }
         if (args.count("verbose")) {

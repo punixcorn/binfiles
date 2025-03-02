@@ -14,6 +14,7 @@
 #COMP_LINE : the current command line
 #COMPREPLY = a var used to store completions
 
+
 __gitalias_completions() {
     if [ -d .git ]; then
         local curr_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
