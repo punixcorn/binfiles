@@ -1,6 +1,6 @@
 FILE=_msd.cxx
 CC=g++
-fmt=-lfmt -std=c++2a -ggdb
+fmt=-lfmt -std=c++26 -ggdb
 i=
 
 all: $(FILE)

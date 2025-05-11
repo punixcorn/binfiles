@@ -24,6 +24,7 @@ Gitalias a git alias
 
 /* C++ includes */
 #include <cctype>
+#include <exception>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -59,7 +60,7 @@ Gitalias a git alias
 #define rs "\e[0m"
 
 namespace opt = boost::program_options;
-using std::string, std::vector, std::string_view, std::cout, std::cerr,
+using std::string, std::vector, fmt::string_view, std::cout, std::cerr,
     std::nothrow, std::endl, std::cin, std::ifstream;
 
 /* Hold username and token */
@@ -67,19 +68,25 @@ struct UserInfo {
     std::string token;
     std::string username;
     std::string defaultMessage;
+    std::vector<std::string> hosts;
 };
 
 /* handle application error */
-struct Error_occured {
+struct Error_occured : public std::exception {
     // make this a vector -> handles more error messages
    private:
     std::string message;
 
    public:
-    Error_occured() : error_occured(false), message("") {}
     bool error_occured;
+    Error_occured() : message(""), error_occured(false) {}
 
     void trip(std::string &&text) {
+        error_occured = true;
+        message = std::move(text);
+    }
+
+    void trip(std::string &text) {
         error_occured = true;
         message = text;
     }
@@ -566,6 +573,7 @@ int main(int argc, char *argv[]) {
                 "username        : your username\n"
                 "token           : your gitHub Token\n"
                 "default_message : a default commit message\n"
+                "hosts : [a list of hosts in your git config]\n"
                 "================================================\n");
         }
     } catch (const opt::error &ex) {
@@ -585,8 +593,8 @@ int main(int argc, char *argv[]) {
 
 auto Isubcommand(Globals *g, const string_view &s1, const string_view &s2)
     -> void {
-    g->subcommand += s1;
-    if (s2.length() != 0) g->subcommand += s2;
+    g->subcommand += std::string(s1.data());
+    if (s2.size() != 0) g->subcommand += std::string(s2.data());
 }
 
 auto exitWithoutHelp(const string_view &e, int return_val) -> void {
@@ -604,9 +612,16 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
 
 [[nodiscard("grab UserInfo from file")]] auto ParseUserInfo() -> UserInfo {
     UserInfo userinfo;
-    std::string filename = getenv("HOME");
+
+    std::string home_path = getenv("HOME");
+    if (home_path.size() < 0) {
+        exitWithoutHelp("HOME env varibale not set, exiting...");
+    }
+
+    std::string filename =
+        fmt::format("{}/.config/gitalias/githubuserinfo.json", home_path);
+
     bool fileCreated{false};
-    filename.append("/.config/gitalias/githubuserinfo.json");
 
     std::fstream FileToWorkWith;
     FileToWorkWith.open(filename, std::fstream::in | std::fstream::out);
@@ -615,19 +630,22 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
     if (!FileToWorkWith.is_open()) {
         fileCreated = true;
         fmt::print(
-            "Cannot open file, file does not exist. Creating new file..\n");
+            "Cannot open config file, file does not exist. Creating new "
+            "file..\n");
+
+        std::string config_path = fmt::format("{}/config/gitalias/", home_path);
 
         // checking if folder exists
-        if (!std::filesystem::exists(std::string(
-                std::string(getenv("HOME")).append("/.config/gitalias")))) {
-            std::filesystem::create_directory(std::string(
-                std::string(getenv("HOME")).append("/.config/gitalias")));
+        if (!std::filesystem::exists(config_path)) {
+            std::filesystem::create_directory(config_path);
         };
 
         FileToWorkWith.open(filename, std::fstream::in | std::fstream::out |
                                           std::fstream::trunc);
         if (!FileToWorkWith.is_open()) {
-            exitWithoutHelp("\nerror creating file\n");
+            exitWithoutHelp(
+                "\nerror creating config file\n"
+                "create a file at .config/gitalias/gitalias.json");
         }
 
         if (FileToWorkWith.is_open() && !FileToWorkWith.bad()) {
@@ -636,6 +654,7 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
                 "\"username\":\"YOUR_GITHUB_USERNAME\",\n"
                 "\"token\" : \"YOUR_GITHUB_TOKEN\",\n"
                 "\"default_message\" : \"DEFAULT COMMIT MESSAGE\"\n"
+                "\"hosts\" : \"[HOSTS]\"\n"
                 "}}\n");
         } else {
             fmt::print("error with opened file\n");
@@ -658,6 +677,8 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
             boost::property_tree::read_json(filename, pt);
             userinfo.username = pt.get<std::string>("username");
             userinfo.token = pt.get<std::string>("token");
+            auto strings = pt.get<std::vector<const char *>>("hosts");
+
             // userinfo.defaultMessage is not compulsory
             try {
                 userinfo.defaultMessage =
@@ -670,16 +691,21 @@ auto exitWithHelp(const string_view &e, int return_val) -> void {
             fmt::print("{}", ex.what());
         }
     }  // read json file
-
-    // if (fileCreated || userinfo.username == "YOUR_GITHUB_USERNAME" ||
-    //     userinfo.token == "YOUR_GITHUB_TOKEN") {
-    //   exitWithoutHelp(
-    //       "~/.config/gitalias/githubuserinfo was generated\n"
-    //       "It a default config has been created\n"
-    //       "Edit the json file and replace the values with your vaules\n"
-    //       "And try again\n"
-    //       "This program will terminte\n");
-    // }
+    for (const auto &i : userinfo.hosts) {
+        fmt::print("this is a host :{}\n", i);
+    }
+    exitWithHelp("test end");
+    /*
+         if (fileCreated || userinfo.username == "YOUR_GITHUB_USERNAME" ||
+             userinfo.token == "YOUR_GITHUB_TOKEN") {
+           exitWithoutHelp(
+               "~/.config/gitalias/githubuserinfo was generated\n"
+               "It a default config has been created\n"
+               "Edit the json file and replace the values with your vaules\n"
+               "And try again\n"
+               "This program will terminte\n");
+         }
+    */
 
     if (userinfo.token.size() == 0 || userinfo.username.size() == 0) {
         exitWithoutHelp(
@@ -792,7 +818,7 @@ auto checkStaged() -> bool {
     /* when there is no add we get the strings pasted below */
     FILE *fd = popen(" git status ", "r");
     char *temp = new (nothrow) char[1024];
-    if (fd == null || temp == null) exitWithoutHelp("Program Crahsed...");
+    if ((fd == null) || (temp == null)) exitWithoutHelp("Program Crashed...");
     while (fgets(temp, 1023, fd)) {
         string_view tempcmp{temp};
         if (tempcmp == "Changes not staged for commit:\n" ||
@@ -875,12 +901,14 @@ auto createOnlineRepo(Globals *g) -> void {
 }
 
 auto gitalias_main(Globals *g, bool v) -> void {
-    if (g->subcommand.length()) g->command += g->subcommand;
-    if (v) {
+    if (g->subcommand.length() > 0) g->command += g->subcommand;
+
+    if (v == true) {
         fmt::print("\ngitalias V2.6.6-dev\nRunning Command: {} \n", g->command);
         fmt::print("Press any key to continue, Ctrl+c to quit...\n");
         getchar();
     }
+
     if (g->App_error.error_occured) {
         exitWithoutHelp(g->App_error.what());
     }

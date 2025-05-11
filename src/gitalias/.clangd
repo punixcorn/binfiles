@@ -1,0 +1,19 @@
+# Fragment specific to C++ source files
+If:
+  PathMatch: [.*\.cpp,.*\.cxx,.*\.cc]
+CompileFlags:
+  Add: [ -std=gnu++2a ]
+
+---
+
+If:
+  PathMatch: [.*\.c]
+CompileFlags:
+  Add: [ -std=gnu2x ]
+
+---
+
+If:
+  PathMatch: [.*\.h]
+CompileFlags:
+  Add: [-xc]
