@@ -27,7 +27,7 @@ else
 fi
 
 echo "Installing Man pages"
-if [[ -d "/usr/share/man/man1/" ]]then 
+if [[ -d "/usr/share/man/man1/" ]];then 
     sudo cp -r manpages/* /usr/share/man/man1/
 else 
     echo "You don't have manpages install or the default dir set, no manpages will be installed"
